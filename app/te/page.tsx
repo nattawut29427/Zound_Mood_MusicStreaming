@@ -121,7 +121,7 @@ export default function HowlerDemoPage() {
   return (
     <div className="p-6 space-y-4 m-auto max-w-md ">
       <h1 className="text-2xl font-bold">Play music</h1>
-      <p>🎶 กำลังเล่น: {playlist[currentIndex].title}</p>
+      <p> กำลังเล่น: {playlist[currentIndex].title}</p>
 
       <div className="space-x-5">
         <button
