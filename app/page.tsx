@@ -6,7 +6,9 @@ import { Howl } from "howler";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { AuroraText } from "@/components/magicui/aurora-text";
-import { Artwork } from "@/components/types"; // หรือ path ที่ถูกต้อง
+import { Song } from "@/components/types";
+import { useSignedImage } from "@/lib/hooks/useSignedImage";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   CirclePlay,
@@ -16,10 +18,17 @@ import {
   Volume2,
   Repeat,
   Shuffle,
+  ListMusic,
+  Heart,
+  BookOpen,
+  Bot,
+  Settings,
 } from "lucide-react";
 import * as React from "react";
 
 import { ScrollAreaHorizontalDemo } from "@/components/ui/ScrollAreaHorizontalDemo";
+
+const audioUrlCache = new Map<string, { url: string; expires: number }>();
 
 export default function Home() {
   const playlist = [
@@ -27,8 +36,8 @@ export default function Home() {
     { title: "Song 2", src: "/audio/song2.mp3" },
   ];
 
-  const [currentTrack, setCurrentTrack] = useState<Artwork | null>(null);
-
+  const [currentTrack, setCurrentTrack] = useState<Song | null>(null);
+  const signedUrl = useSignedImage(currentTrack?.picture);
 
   const [volume, setVolume] = useState(0.7);
 
@@ -64,25 +73,61 @@ export default function Home() {
     return `${min}:${sec}`;
   };
 
-  const playFromArtwork = (artwork: Artwork) => {
-     setCurrentTrack(artwork);
+  // Playsong อันนี้ไว้เล่นเพลงๆ เดียวจากที่เลือกเท่านั้น
+  const playSong = async (song: Song) => {
+    const key = song.audio_url;
+    setCurrentTrack(song);
 
-    if (sound) sound.stop();
+    if (sound) {
+      sound.stop();
+      sound.unload();
+    }
+
+    if (!key) {
+      console.error("Missing audio_url in song");
+      return;
+    }
+
+    // เช็ค cache
+    const cached = audioUrlCache.get(key);
+    const now = Date.now();
+
+    let signedUrl: string;
+
+    if (cached && cached.expires > now) {
+      signedUrl = cached.url;
+    } else {
+      const res = await fetch(`/api/playsong?key=${encodeURIComponent(key)}`);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Unknown error");
+      }
+      const data = await res.json();
+      signedUrl = data.url;
+      audioUrlCache.set(key, {
+        url: signedUrl,
+        expires: now + 4.5 * 60 * 1000, // เก็บไว้ 4.5 นาที
+      });
+    }
 
     const newSound = new Howl({
-      src: [artwork.audio],
+      src: [signedUrl],
       volume: volume,
       onload: () => {
         setDuration(newSound.duration());
         newSound.play();
         setIsPlaying(true);
       },
-      onend: () => setIsPlaying(false),
+      onend: () => {
+        setIsPlaying(false);
+      },
     });
 
     setSound(newSound);
   };
 
+
+  // เอาไว้เล่นเพลงจาก playlist
   const playSound = (index: number) => {
     if (sound) {
       sound.stop();
@@ -202,15 +247,36 @@ export default function Home() {
 
       {/* Main content */}
       <main className="w-full flex px-4 justify-between m-auto space-x-2 h-[calc(100vh-5rem)]">
-        <div className="w-32 bg-gradient-to-t from-black from-[10%] to-[#252525] shadow-xl flex flex-col justify-between">
-          <div className="">1</div>
+        <div className="w-32 p-4 bg-gradient-to-t from-black from-[10%] to-[#252525] shadow-xl flex flex-col justify-between">
+          <div className="flex flex-col items-center justify-center gap-12 mt-8 text-white font-semibold text-sm">
+            <div className="flex flex-col items-center cursor-pointer hover:text-gray-400 duration-200 gap-1">
+              <ListMusic className="w-5 h-5" />
+              <span>Play lists</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 hover:text-gray-400 duration-200">
+              <Heart className="w-5 h-5" />
+              <span>Like song</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 hover:text-gray-400 duration-200 ">
+              <BookOpen className="w-5 h-5" />
+              <span>Dairy</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 hover:text-gray-400 duration-200">
+              <Bot className="w-5 h-5" />
+              <span>Ai</span>
+            </div>
+            <div className="justify-center items-center mt-24 flex flex-col  text-center gap-1">
+              <Settings className="w-5 h-5 text-white cursor-pointer " />
+              <span>Settings</span>
+            </div>
+          </div>
+          <div></div>
         </div>
 
         <div className="w-full p-10  overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full  [&::-webkit-scrollbar-thumb]:bg-white h-full bg-gradient-to-t from-black from-[10%] to-[#252525] shadow-lg flex flex-col justify-between">
           <div className="">
-            <h1 className="text-white font-bold text-4xl">Topic</h1>
-            <div className="pt-10 overflow-x-auto ">
-              <ScrollAreaHorizontalDemo onSelect={playFromArtwork} />
+            <div className=" overflow-x-auto ">
+              <ScrollAreaHorizontalDemo onSelect={playSong} />
             </div>
           </div>
           <div className="pt-2">
@@ -262,26 +328,32 @@ export default function Home() {
         </div>
       </main>
       {/* Footer */}
-      <footer className="bg-black fixed bottom-0 left-0 w-full z-50 bg-black flex items-center justify-between shadow-2xl p-4 h-20">
+      <footer className="bg-black fixed bottom-0 left-0 w-full z-50  flex items-center justify-between shadow-2xl p-4 h-20">
         {/* Left side */}
         <div className="flex items-center cursor-pointer space-x-4 w-1/3 pl-4">
-          {currentTrack && (
-            <>
-              <Image
-                src={currentTrack.art}
-                alt="cover"
-                width={48}
-                height={48}
-                className="rounded-md aspect-[4/4] object-cover"
-              />
-              <div className="text-white">
-                <p className="font-semibold">{currentTrack.artist}</p>
-                <p className="text-xs text-gray-400">
-                  {currentTrack.name || "Untitled"}
-                </p>
-              </div>
-            </>
-          )}
+          {currentTrack ? (
+            signedUrl ? (
+              <>
+                <Image
+                  src={signedUrl}
+                  alt="cover"
+                  width={48}
+                  height={48}
+                  className="rounded-md aspect-[4/4] object-cover"
+                />
+                <div className="text-white">
+                  <p className="font-semibold">
+                    {currentTrack.name_song || "Unknown Artist"}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {currentTrack.uploader.username || "Untitled"}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <Skeleton className="h-12 bg-black w-12 rounded-md" />
+            )
+          ) : null}
         </div>
 
         <div className="w-full flex ">
@@ -297,7 +369,7 @@ export default function Home() {
             onChange={handleSeek}
             className="w-full h-1 m-auto   rounded-lg  appearance-none cursor-pointer"
             style={{
-              background: `linear-gradient(to right, #22c55e ${
+              background: `linear-gradient(to right, #ffffff ${
                 (position / duration) * 100
               }%, #6b7280 ${(position / duration) * 100}%)`,
               borderRadius: "999px",
@@ -339,9 +411,11 @@ export default function Home() {
           <input
             type="range"
             min={0}
-            max={100}
-            defaultValue={70}
-            className="w-24 h-1 bg-red-500 rounded-lg appearance-none cursor-pointer"
+            max={1}
+            step={0.01}
+            value={volume}
+            onChange={handleVolumeChange}
+            className="w-24 h-1 bg-red-500 rounded-lg appearance-auto cursor-pointer"
             style={{
               background: `linear-gradient(to right, #22c55e ${
                 (volume / 1) * 100

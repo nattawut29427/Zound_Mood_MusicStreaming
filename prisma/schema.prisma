@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  username   String
+  role       String
+  profile    String?
+  created_at DateTime  @default(now())
+
+
+  songs      Song[]         @relation("UploadedSongs")
+  playlists  Playlist[]
+  likesongs  LikeSong[]
+  followers  Follow[]       @relation("Followers")
+  following  Follow[]       @relation("Following")
+  diaries    Diary[]
+  feeds      Feed[]
+}
+
+model Song {
+  id         Int         @id @default(autoincrement())
+  name_song  String
+  picture    String?
+  audio_url  String      @unique
+  like       Int         @default(0)
+  uploaded_by Int
+  created_at DateTime    @default(now())
+
+  uploader   User        @relation("UploadedSongs", fields: [uploaded_by], references: [id])
+  playlist_songs PlaylistSong[]
+  likesongs  LikeSong[]
+  feeds      Feed[]
+  diary      Diary?
+  feed_items FeedItem[]
+  song_tags  SongTag[]
+}
+
+model Playlist {
+  id         Int           @id @default(autoincrement())
+  user_id    Int
+  created_at DateTime      @default(now())
+
+  user       User          @relation(fields: [user_id], references: [id])
+  playlist_songs PlaylistSong[]
+  feeds      Feed[]
+}
+
+model PlaylistSong {
+  playlist_id Int
+  song_id     Int
+  created_at  DateTime     @default(now())
+
+  playlist    Playlist     @relation(fields: [playlist_id], references: [id])
+  song        Song         @relation(fields: [song_id], references: [id])
+
+  @@id([playlist_id, song_id])
+}
+
+model LikeSong {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  song_id    Int
+  created_at DateTime  @default(now())
+
+  user       User      @relation(fields: [user_id], references: [id])
+  song       Song      @relation(fields: [song_id], references: [id])
+}
+
+model Follow {
+  following_user_id Int
+  followed_user_id  Int
+  created_at       DateTime  @default(now())
+
+  following_user   User      @relation("Following", fields: [following_user_id], references: [id])
+  followed_user    User      @relation("Followers", fields: [followed_user_id], references: [id])
+
+  @@id([following_user_id, followed_user_id])
+}
+
+model Feed {
+  id          Int        @id @default(autoincrement())
+  user_id     Int
+  song_id     Int
+  playlist_id Int
+  created_at  DateTime   @default(now())
+
+  user        User       @relation(fields: [user_id], references: [id])
+  song        Song       @relation(fields: [song_id], references: [id])
+  playlist    Playlist   @relation(fields: [playlist_id], references: [id])
+}
+
+model FeedSection {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  created_at  DateTime   @default(now())
+
+  feed_items  FeedItem[]
+}
+
+model FeedItem {
+  id          Int        @id @default(autoincrement())
+  section_id  Int
+  song_id     Int
+  order_index Int
+  created_at  DateTime   @default(now())
+
+  section     FeedSection @relation(fields: [section_id], references: [id])
+  song        Song       @relation(fields: [song_id], references: [id])
+}
+
+model Diary {
+  id          Int       @id @default(autoincrement())
+  name_diary  String
+  description String?
+  song_id     Int       @unique
+  user_id     Int
+  is_private  Boolean   @default(false)
+  created_at  DateTime  @default(now())
+  song        Song      @relation(fields: [song_id], references: [id])
+  user        User      @relation(fields: [user_id], references: [id])
+  diary_feeds DiaryFeed[]
+}
+
+model DiaryFeed {
+  id        Int     @id @default(autoincrement())
+  diary_id  Int
+  comments  String?
+
+  diary     Diary   @relation(fields: [diary_id], references: [id])
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name_tag  String
+  song_tags SongTag[]
+}
+
+model SongTag {
+  song_id Int
+  tag_id  Int
+
+  song    Song    @relation(fields: [song_id], references: [id])
+  tag     Tag     @relation(fields: [tag_id], references: [id])
+
+  @@id([song_id, tag_id])
+}

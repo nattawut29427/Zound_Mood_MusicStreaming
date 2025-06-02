@@ -1,7 +1,13 @@
 // components/types.ts
-export interface Artwork {
-  artist: string;
-  art: string;
-  audio: string;
-  name: string;
+
+export interface Song {
+  id: number;
+  name_song: string;
+  audio_url: string;
+  picture: string;
+  uploader: {
+    id: number;
+    username: string;
+    profile: string | null; // ถ้า profile เป็น optional
+  };
 }
