@@ -84,7 +84,7 @@
 };
 
  return (
-  <div className="bg-black h-screen flex ">
+  <div className=" h-screen flex ">
 
   <div className="max-w-md mx-auto h-fit mt-10 p-6 bg-white  rounded-lg shadow-md">
     <h2 className="text-xl font-semibold mb-4 text-center">อัปโหลดเพลงใหม่</h2>

@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
+import Sidebar2 from "@/components/Sidebar2";
+import Player from "@/components/player";
+import { PlayerProvider } from "@/app/context/Playercontext";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -25,9 +31,24 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className="overflow-hidden"
+        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-black h-screen overflow-hidden`}
       >
-        {children}
+        <PlayerProvider>
+          {/* Header */}
+          <Header />
+
+          
+          <div className="flex p-4 gap-4 h-[calc(100vh-5rem)]">
+            <Sidebar />
+            <main className="flex-1 bg-gradient-to-t from-black from-[10%] to-[#252525] overflow-y-auto">
+              {children}
+            </main>
+            <Sidebar2/>
+          </div>
+
+          
+          <Player />
+        </PlayerProvider>
       </body>
     </html>
   );
