@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
+import { SessionProvider } from "next-auth/react"; 
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Sidebar2 from "@/components/Sidebar2";
@@ -30,6 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans bg-black h-screen overflow-hidden`}
       >

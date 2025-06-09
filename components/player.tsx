@@ -78,7 +78,7 @@ export default function Player() {
               <div className="text-white">
                 <p className="font-semibold">{currentTrack.name_song}</p>
                 <p className="text-xs text-gray-400">
-                  {currentTrack.uploader?.username}
+                  {currentTrack.uploader?.name}
                 </p>
               </div>
             </>

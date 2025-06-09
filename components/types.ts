@@ -7,7 +7,8 @@ export interface Song {
   picture: string;
   uploader: {
     id: number;
-    username: string;
+    name: string;
     profile: string | null; // ถ้า profile เป็น optional
   };
 }
+
