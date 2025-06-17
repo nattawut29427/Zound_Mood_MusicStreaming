@@ -62,7 +62,7 @@
         name_song: nameSong,
         audio_urlKey: songKey,
         pictureKey: picKey,
-        uploaded_by: 1, // สมมุติว่า userId คือ 1
+        uploaded_by: 1, 
       }),
     });
 

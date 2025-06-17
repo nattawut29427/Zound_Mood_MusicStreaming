@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   CirclePlay,
   PauseCircle,
@@ -61,34 +62,39 @@ export default function Player() {
     localStorage.setItem("volume", newVol.toString());
   };
 
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
 
   return (
     <footer className="bg-black fixed bottom-0 left-0 w-full z-50  flex items-center justify-between shadow-2xl p-2 h-20">
-      <div className="flex items-center cursor-pointer space-x-4 w-1/3 pl-4">
-        {currentTrack ? (
-          signedUrl ? (
-            <>
-              <Image
-                src={signedUrl}
-                alt="cover"
-                width={48}
-                height={48}
-                className="rounded-md aspect-[4/4] object-cover"
-              />
-              <div className="text-white">
-                <p className="font-semibold">{currentTrack.name_song}</p>
-                <p className="text-xs text-gray-400">
-                  {currentTrack.uploader?.name}
-                </p>
-              </div>
-            </>
+      {/* <Link href={"/viewsongs"} className="flex pl-4 w-1/3 "> */}
+        <div className="flex items-center cursor-pointer space-x-4 w-1/3 pl-4">
+          {currentTrack ? (
+            signedUrl ? (
+              <>
+                <Image
+                  src={signedUrl}
+                  alt="cover"
+                  width={48}
+                  height={48}
+                  className="rounded-md aspect-[4/4] object-cover"
+                />
+                <div className="text-white">
+                  <p className="font-semibold">{currentTrack.name_song}</p>
+                  <p className="text-xs text-gray-400">
+                    {currentTrack.uploader?.name}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <Skeleton className="h-12 bg-black w-12 rounded-md" />
+            )
           ) : (
-            <Skeleton className="h-12 bg-black w-12 rounded-md" />
-          )
-        ) : (
-          <div className="text-white text-sm italic">No track selected</div>
-        )}
-      </div>
+            <div className="text-white text-sm italic"></div>
+          )}
+        </div>
+      {/* </Link> */}
 
       <div className="w-full flex pr-4">
         <label className="block px-2 text-white text-sm font-medium mb-1">
@@ -135,7 +141,6 @@ export default function Player() {
             isLooping ? "text-blue-500" : "text-white"
           } hover:text-blue-500`}
         />
-       
       </div>
       <div className="flex items-center justify-end space-x-2 w-1/3 pr-4">
         <Volume2 className="w-5 h-5 text-white" />

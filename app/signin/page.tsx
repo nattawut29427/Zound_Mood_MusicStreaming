@@ -34,7 +34,7 @@ const SignIn = () => {
       if (result?.error) {
         setError(result.error);
       } else {
-        router.push("/redirect-handler");
+        router.push("/");
       }
     },
     [email, password, router]
@@ -44,7 +44,7 @@ const SignIn = () => {
     setLoading(true);
     setError(null);
 
-    const result = await signIn("google", { callbackUrl: "/redirect-handler" });
+    const result = await signIn("google", { callbackUrl: "/" });
 
     setLoading(false);
 

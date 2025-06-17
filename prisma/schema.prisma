@@ -182,7 +182,7 @@ model DiaryFeed {
 
 model Tag {
   id        Int       @id @default(autoincrement())
-  name_tag  String
+  name_tag  String    @unique
   song_tags SongTag[]
 }
 

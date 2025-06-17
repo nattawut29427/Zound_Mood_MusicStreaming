@@ -3,21 +3,15 @@
 import { ScrollAreaHorizontalDemo } from "@/components/ui/ScrollAreaHorizontalDemo";
 
 export default function HomePage() {
-
-
-
-  
   return (
-    <div className="p-10 space-y-10 bg-gradient-to-t from-black from-[10%] to-[#252525]">
+    <div>
       <div className="overflow-x-auto">
         <ScrollAreaHorizontalDemo />
       </div>
 
       <div>
         <h1 className="text-white font-bold text-4xl">Topic</h1>
-        <div className="mt-8 flex gap-4">
-          {/* เอา card เพลงมาใส่ตรงนี้ */}
-        </div>
+        <div className="mt-8 flex gap-4"></div>
       </div>
     </div>
   );

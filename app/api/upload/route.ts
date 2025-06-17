@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name_song, audio_urlKey, uploaded_by, pictureKey } = await req.json();
+    const { name_song, audio_urlKey, uploaded_by, pictureKey, tag } = await req.json();
     const userId = Number(uploaded_by);
 
     if (!name_song || !audio_urlKey || !userId || !pictureKey) {
@@ -44,6 +44,34 @@ export async function POST(req: NextRequest) {
         picture: true,
       },
     });
+
+    // if (tag) {
+    //   const tagList = tag.split(",").map((t: string) => t.trim());
+
+    //   for (const tagName of tagList) {
+    //     const existingTag = await prisma.tag.findUnique({
+    //       where: { name_tag: tagName },
+    //     });
+
+    //     let tagId: number;
+
+    //     if (existingTag) {
+    //       tagId = existingTag.id;
+    //     } else {
+    //       const newTag = await prisma.tag.create({
+    //         data: { name_tag: tagName },
+    //       });
+    //       tagId = newTag.id;
+    //     }
+
+    //     await prisma.songTag.create({
+    //       data: {
+    //         song_id: newSong.id,
+    //         tag_id: tagId,
+    //       },
+    //     });
+    //   }
+    // }
 
     return NextResponse.json({ success: true, song: newSong });
   } catch (err: any) {
