@@ -1,13 +1,16 @@
 "use client";
 
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
+import { useFile } from "@/app/context/Filecontext";
+import { useSession } from "next-auth/react";
 
 export default function Page() {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+  const { file } = useFile(); // ดึงไฟล์จาก context
   const [nameSong, setNameSong] = useState("");
   const [message, setMessage] = useState("");
   const [picture, setPicture] = useState<File | null>(null);
-  const [file, setFile] = useState<File | null>(null);
   const [tag, setTag] = useState("");
   const [description, setDescription] = useState("");
 
@@ -24,11 +27,9 @@ export default function Page() {
     }
 
     try {
-      // key สำหรับเพลงและภาพ
       const songKey = `songs/${Date.now()}_${file.name}`;
       const picKey = `pictures/${Date.now()}_${picture.name}`;
 
-      //  สำหรับอัปโหลดไฟล์เพลง
       const songUrlRes = await fetch(
         `/api/upload?key=${encodeURIComponent(
           songKey
@@ -44,7 +45,6 @@ export default function Page() {
       });
       if (!songUploadRes.ok) throw new Error("อัปโหลดเพลงล้มเหลว");
 
-      // สำหรับอัปโหลดรูปภาพ
       const picUrlRes = await fetch(
         `/api/upload?key=${encodeURIComponent(
           picKey
@@ -60,7 +60,6 @@ export default function Page() {
       });
       if (!picUploadRes.ok) throw new Error("อัปโหลดรูปภาพล้มเหลว");
 
-      // บันทึก DB
       const saveRes = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,59 +67,59 @@ export default function Page() {
           name_song: nameSong,
           audio_urlKey: songKey,
           pictureKey: picKey,
-          uploaded_by: 1,
+          uploaded_by: userId,
+          tag,
+          description,
         }),
       });
 
       const saveData = await saveRes.json();
-
       if (!saveRes.ok) {
         setMessage("บันทึกข้อมูลเพลงล้มเหลว: " + (saveData.error || ""));
         return;
       }
 
       setMessage("อัปโหลดเพลงและรูปภาพสำเร็จ!");
-      // setFile(null);
       setPicture(null);
       setNameSong("");
     } catch (error: any) {
       setMessage("เกิดข้อผิดพลาด: " + error.message);
     }
+
   };
 
   return (
     <div className="text-white">
       <div className="font-bold text-3xl mb-8">Upload your song</div>
 
-      <div className="flex flex-wrap gap- justify-between">
-        {/* ซ้าย: อัปโหลดไฟล์ */}
+      <div className="flex flex-wrap gap-4 justify-between">
         <div className="w-72">
           <label
             htmlFor="file-upload"
             className="flex flex-col items-center justify-center border-2 border-dashed border-white rounded-2xl h-72 cursor-pointer transition hover:bg-white/10"
           >
             <div className="text-white font-semibold text-lg">
-              Upload file here
+              Upload picture
             </div>
-            <div className="text-sm text-gray-400 mt-1">
-              (Only .jpg, .png files)
-            </div>
+            <div className="text-sm text-gray-400 mt-1">(Only .jpg, .png)</div>
           </label>
           <input
             id="file-upload"
             type="file"
             accept="image/*"
             className="hidden"
+            onChange={handlePictureChange}
           />
         </div>
 
-        {/* ขวา: test หรือฟอร์มอื่น */}
         <div className="w-full md:w-1/2 flex flex-col gap-4">
           <label className="text-white font-medium">Track title</label>
           <input
             type="text"
             placeholder="Type your track title"
             className="p-2 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none"
+            value={nameSong}
+            onChange={(e) => setNameSong(e.target.value)}
           />
 
           <label className="text-white font-medium">Tag</label>
@@ -128,6 +127,8 @@ export default function Page() {
             type="text"
             placeholder="Type your tag"
             className="p-2 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none"
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
           />
 
           <label className="text-white font-medium">Description</label>
@@ -135,14 +136,22 @@ export default function Page() {
             rows={4}
             placeholder="Additional description"
             className="p-2 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="mt-10 flex justify-end">
-        <button onClick={handleUpload} className="bg-pink-500 text-white font-semibold py-2 px-6 rounded-2xl">
+      <div className="mt-10 flex justify-end gap-4">
+        <button
+          onClick={handleUpload}
+          className="bg-pink-500 text-white font-semibold py-2 px-6 rounded-2xl"
+        >
           Upload
         </button>
+        {message && (
+          <p className="mt-4 text-center text-sm text-gray-300">{message}</p>
+        )}
       </div>
     </div>
   );

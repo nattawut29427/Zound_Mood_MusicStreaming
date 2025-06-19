@@ -8,6 +8,7 @@ import Sidebar2 from "@/components/Sidebar2";
 import Player from "@/components/player";
 import { PlayerProvider } from "@/app/context/Playercontext";
 import { SessionWrapper } from "../SessionWrapper";
+import { FileProvider } from "@/app/context/Filecontext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="font-sans bg-black text-white h-screen overflow-hidden">
         <SessionWrapper>
+        <FileProvider>
           <PlayerProvider>
             <Header />
 
@@ -46,6 +48,7 @@ export default function RootLayout({
 
             <Player />
           </PlayerProvider>
+          </FileProvider>
         </SessionWrapper>
       </body>
     </html>
