@@ -68,8 +68,11 @@ export default function Player() {
 
   return (
     <footer className="bg-black fixed bottom-0 left-0 w-full z-50  flex items-center justify-between shadow-2xl p-2 h-20">
-      {/* <Link href={"/viewsongs"} className="flex pl-4 w-1/3 "> */}
-        <div className="flex items-center cursor-pointer space-x-4 w-1/3 pl-4">
+      
+      {/* ที่เเสดงชื่อเพลง */}
+     
+      <Link href={`/viewsongs/${currentTrack?.id}`} className="w-1/3">
+        <div className="flex items-center cursor-pointer space-x-4 pl-4">
           {currentTrack ? (
             signedUrl ? (
               <>
@@ -91,10 +94,12 @@ export default function Player() {
               <Skeleton className="h-12 bg-black w-12 rounded-md" />
             )
           ) : (
-            <div className="text-white text-sm italic"></div>
+            <div className="text-white text-sm italic" />
           )}
         </div>
-      {/* </Link> */}
+      </Link>
+
+      {/* ที่เเสดงเวลาเพลง */}
 
       <div className="w-full flex pr-4">
         <label className="block px-2 text-white text-sm font-medium mb-1">
@@ -119,6 +124,8 @@ export default function Player() {
           {formatTime(duration)}
         </label>
       </div>
+
+      {/* ปุ่มควบคุมเพลง */}
 
       <div className="flex  items-center space-x-4 w-1/3 pr-4 ">
         <Shuffle className="w-5 h-5 text-white hover:text-blue-500 cursor-pointer" />

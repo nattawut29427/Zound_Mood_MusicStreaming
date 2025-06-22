@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
 
     if (!name_song || !audio_urlKey || !uploaded_by || !pictureKey || !tag) {
-      console.log("Missing required fields", { name_song, audio_urlKey, userId, pictureKey, tag });
+
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 

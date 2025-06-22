@@ -79,7 +79,7 @@
     }
 
     return (
-      <ScrollArea className="w-full whitespace-nowrap overflow-x-auto">
+      <ScrollArea className="w-full p-10 space-y-10 whitespace-nowrap overflow-x-auto">
         {sections.map((section) => (
           <div key={section.id} className="mb-8">
             <h2 className="text-white font-bold text-3xl mb-4">{section.title}</h2>

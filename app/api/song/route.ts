@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
         uploader: {
           select: {
             id: true,
-            username: true, 
+            name: true, 
           },
         },
       },
