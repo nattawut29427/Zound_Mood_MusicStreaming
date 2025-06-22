@@ -11,8 +11,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const user = await prisma.user.findUnique({
     where: { id },
      select: {
-      username: true,
-      profile: true,
+      name: true,
+      image : true,
     },
   });
 
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   return NextResponse.json({ 
-    profileKey: user.profile,
-    username: user.username 
+    profileKey: user.image,
+    username: user.name 
 });
 }
