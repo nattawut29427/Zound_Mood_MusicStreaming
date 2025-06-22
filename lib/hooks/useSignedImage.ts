@@ -1,4 +1,5 @@
 // lib/hooks/useSignedImage.ts
+"use client";
 import { useEffect, useState } from "react";
 import { getSignedPictureUrl } from "../getSigned";
 
