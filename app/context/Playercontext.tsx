@@ -1,4 +1,3 @@
-// app/context/Playercontext.tsx
 "use client";
 
 import {
@@ -10,6 +9,7 @@ import {
 } from "react";
 import { Howl } from "howler";
 import { Song } from "@/components/types";
+import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 
 type PlayerContextType = {
   currentTrack: Song | null;
@@ -39,6 +39,9 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [duration, setDuration] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
 
+  // ใช้ useCachedSignedUrl เพื่อแคช signed url
+  const signedUrl = useCachedSignedUrl(currentTrack?.audio_url);
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (sound && isPlaying) {
@@ -48,28 +51,23 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(interval);
   }, [sound, isPlaying]);
 
-  // สำหรับ เล่นเพลง
-  const playSong = async (song: Song) => {
-    setCurrentTrack(song);
+  // เล่นเพลงเมื่อ signedUrl เปลี่ยน (ได้ URL ที่แคชแล้ว)
+  useEffect(() => {
+    if (!signedUrl || !currentTrack) return;
+
     if (sound) {
       sound.stop();
       sound.unload();
     }
 
-    const res = await fetch(
-      `/api/playsong?key=${encodeURIComponent(song.audio_url)}`
-    );
-    const { url } = await res.json();
-
     const newSound = new Howl({
-      src: [url],
+      src: [signedUrl],
+      html5: true,
       volume,
-      onload: () => {
-        setDuration(newSound.duration());
-        newSound.play();
-      },
+
       onplay: () => {
         setIsPlaying(true);
+        setDuration(newSound.duration()); 
       },
       onend: () => {
         setIsPlaying(false);
@@ -79,7 +77,16 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
+    newSound.play();
     setSound(newSound);
+
+    return () => {
+      newSound.unload();
+    };
+  }, [signedUrl, currentTrack?.id]);
+
+  const playSong = (song: Song) => {
+    setCurrentTrack(song);
   };
 
   const pause = () => {
@@ -96,17 +103,16 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-const toggleLoop = () => {
-  setIsLooping(prev => !prev);
-};
+  const toggleLoop = () => {
+    setIsLooping((prev) => !prev);
+  };
 
-// ใช้ useEffect คอยเช็ค isLooping แล้ว set loop ให้ sound ทุกครั้งที่เปลี่ยน
-useEffect(() => {
-  if (sound) {
-    sound.loop(isLooping);
-    console.log("useEffect set sound.loop to", isLooping);
-  }
-}, [isLooping, sound]);
+  // ตั้งค่า loop ให้ sound ทุกครั้งที่ isLooping หรือ sound เปลี่ยน
+  useEffect(() => {
+    if (sound) {
+      sound.loop(isLooping);
+    }
+  }, [isLooping, sound]);
 
   const seek = (pos: number) => {
     if (sound) {
@@ -123,17 +129,11 @@ useEffect(() => {
     }
   };
 
-  useEffect(() => {
-    if (sound) {
-      sound.loop(isLooping);
-    }
-  }, [isLooping, sound]);
-
-  // pause & play by spacebar
+  // ควบคุม pause/play ด้วย spacebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space") {
-        e.preventDefault(); // ป้องกันการ scroll หน้า
+        e.preventDefault();
         if (isPlaying) {
           pause();
         } else {
@@ -141,10 +141,9 @@ useEffect(() => {
         }
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPlaying, pause, resume]);
+  }, [isPlaying]);
 
   return (
     <PlayerContext.Provider
@@ -154,12 +153,12 @@ useEffect(() => {
         volume,
         position,
         duration,
+        isLooping,
         playSong,
         pause,
         resume,
         seek,
         setVolume,
-        isLooping,
         toggleLoop,
       }}
     >

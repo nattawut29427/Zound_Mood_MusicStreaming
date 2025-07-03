@@ -1,8 +1,8 @@
 import React from 'react'
-import Playsong from '@/components/Playsong'
+import Header from '@/components/Header'
 
-export default function playsong() {
+export default function HeaderPage() {
   return (
-    <div><Playsong /></div>
+    <div><Header /></div>
   )
 }

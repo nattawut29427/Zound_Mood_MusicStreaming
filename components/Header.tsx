@@ -3,7 +3,8 @@ import { useSession } from "next-auth/react";
 import { AuroraText } from "@/components/magicui/aurora-text";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {  signOut } from "next-auth/react";
+import Image from "next/image";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 
 export default function Header() {
@@ -25,34 +26,44 @@ export default function Header() {
 
       <div className="flex items-center space-x-4">
         <Link href="/feed">
-          <Button size="lg" className="rounded-full text-white cursor-pointer" variant="ghost">Feed</Button>
+          <Button
+            size="lg"
+            className="rounded-full text-white cursor-pointer"
+            variant="ghost"
+          >
+            Feed
+          </Button>
         </Link>
         <div className="bg-white h-10 rounded-full w-1 bg-gradient-to-b from-red-500 to-pink-400"></div>
         <Link href="/upload">
-          <Button size="lg" className="rounded-full text-white cursor-pointer" variant="ghost">Upload</Button>
+          <Button
+            size="lg"
+            className="rounded-full text-white cursor-pointer"
+            variant="ghost"
+          >
+            Upload
+          </Button>
         </Link>
-        <Button 
-        
-        size="lg" 
-        className="rounded-full text-white cursor-pointer" 
-        variant="ghost"
-        onClick={() => signOut({ callbackUrl: "/signin" })}
->
-          
+        <Button
+          size="lg"
+          className="rounded-full text-white cursor-pointer"
+          variant="ghost"
+          onClick={() => signOut({ callbackUrl: "/signin" })}
+        >
           signout
         </Button>
 
-        {status === "authenticated" ? (
-          <Avatar>
-            <AvatarImage
-              src={session.user?.image || undefined}
-              alt={session.user?.username || "user"}
-            />
-            <AvatarFallback>
-              {(session.user?.username || "U")?.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        ) : <Avatar/>}
+        {status === "authenticated" && session ? (
+          <Image
+            src={session.user?.image || ""}
+            alt="avatar"
+            width={30}
+            height={30}
+            className="rounded-full cursor-pointer hover:opacity-80 transition-opacity duration-300"
+          />
+        ) : (
+          <div>No avatar</div>
+        )}
       </div>
     </header>
   );

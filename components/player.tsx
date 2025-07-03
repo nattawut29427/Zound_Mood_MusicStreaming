@@ -15,6 +15,7 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSignedImage } from "@/lib/hooks/useSignedImage";
 import { usePlayer } from "@/app/context/Playercontext";
+import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 
 export default function Player() {
   const {
@@ -31,8 +32,8 @@ export default function Player() {
     toggleLoop,
   } = usePlayer();
 
-  const signedUrl = useSignedImage(currentTrack?.picture);
-
+  const signedUrl =  useSignedImage(currentTrack?.picture ?? undefined);
+ 
   useEffect(() => {
     const saved = localStorage.getItem("volume");
     if (saved) setVolume(parseFloat(saved));
@@ -82,6 +83,7 @@ export default function Player() {
                   width={48}
                   height={48}
                   className="rounded-md aspect-[4/4] object-cover"
+                   unoptimized
                 />
                 <div className="text-white">
                   <p className="font-semibold">{currentTrack.name_song}</p>

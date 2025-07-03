@@ -1,33 +1,56 @@
-import { prisma } from "@/lib/prisma"
-import SongCover from "@/components/Songcover"; 
+import { prisma } from "@/lib/prisma";
+import PlaylistCover from "@/components/PlaylistCover";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import Link from "next/link";
 
-interface Props {
-  params: {
-    id: string
+export default async function SongDetailPage() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return <div className="text-white">Unauthorized</div>;
   }
-}
 
-export default async function SongDetailPage({ params }: Props) {
-  const song = await prisma.playlist.findUnique({
+  const playlists = await prisma.playlist.findMany({
     where: {
-      id: Number(params.id),
-      
+      user_id: userId,
     },
     include: {
       playlist_songs: true,
+      user: true,
     },
-  })
+  });
 
-  if (!song) {
-    return <div className="text-white">Song not found</div>
+  if (!playlists || playlists.length === 0) {
+    return <div className="text-white">No playlists found</div>;
   }
 
   return (
-    <div className="text-white p-4">
-      <h1 className="text-3xl font-bold">Playlists</h1>
-      {/* <SongCover picture={song.pic_playlists ?? ""} name={song.name_playlist} /> */}
-      {/* <p className="text-gray-400">Uploaded by: {song.?.name}</p> */}
-      {/* เพิ่มข้อมูลอื่น ๆ ได้ตามต้องการ */}
+    <>
+    <div className="p-10 space-y-10">
+
     </div>
-  )
+    <div className="grid lg:grid-cols-6 gap-4">
+      {playlists.map((playlist) => (
+          <Link key={playlist.id} href={`/playlists/${playlist.id}`}>
+          <div className="rounded-lg cursor-pointer hover:opacity-80 transition p-2">
+            <PlaylistCover
+              picture={playlist.pic_playlists ?? ""}
+              name={playlist.name_playlist}
+              />
+            <figcaption className="pt-2 text-xs text-muted-foreground">
+              <span className="font-bold text-md text-white">
+                {playlist.name_playlist}
+              </span>
+              <p className="text-md font-semibold text-muted-foreground">
+                By : {playlist.user.name}
+              </p>
+            </figcaption>
+          </div>
+        </Link>
+      ))}
+    </div>
+      </>
+  );
 }
