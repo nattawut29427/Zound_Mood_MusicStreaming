@@ -9,10 +9,7 @@ export default function HomePage() {
         <ScrollAreaHorizontalDemo />
       </div>
 
-      <div>
-        <h1 className="text-white font-bold text-4xl">Topic</h1>
-        <div className="mt-8 flex gap-4"></div>
-      </div>
+     
     </div>
   );
 }
