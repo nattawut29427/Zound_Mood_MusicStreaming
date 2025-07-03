@@ -49,20 +49,31 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, account, profile }) => {
       if (user) {
-        token.id = user.id.toString();  // แปลงเป็น string
-        // token.role = user.role;
+        token.id = user.id.toString();
       }
+
+      // ✅ ดึงรูปจาก Google profile และเก็บใน token.picture
+      if (account?.provider === "google" && profile) {
+        const googleProfile = profile as any;
+        token.picture = googleProfile.picture;
+        token.username = googleProfile.name;
+      }
+
       return token;
     },
+
     session: async ({ session, token }) => {
       if (session.user) {
         session.user.id = token.id as string;
-        // session.user.role = token.role as string;
+        session.user.image = token.picture as string; // ✅ ต้องมีบรรทัดนี้!
+        session.user.username = token.username as string; // fallback เผื่อไม่มี username
       }
       return session;
     },
