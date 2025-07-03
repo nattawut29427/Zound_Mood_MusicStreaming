@@ -13,7 +13,7 @@ declare module "next-auth" {
 
   interface JWT {
     id: string;
- 
+    image?: string;
   }
 
 
