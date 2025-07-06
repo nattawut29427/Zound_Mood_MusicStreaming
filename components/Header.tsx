@@ -13,7 +13,9 @@ export default function Header() {
   return (
     <header className="bg-black p-6 h-16 w-full sticky top-0 z-10 mb-4 flex items-center justify-between">
       <div className="text-white font-bold text-2xl">
-        <AuroraText>Logo</AuroraText>
+        <Link href="/">
+        <AuroraText>Zound mooz</AuroraText>
+        </Link>
       </div>
 
       <div className="flex-1 max-w-lg ml-40 pt-2.5">
