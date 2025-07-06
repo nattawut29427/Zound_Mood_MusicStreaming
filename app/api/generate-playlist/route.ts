@@ -12,7 +12,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const playlistData = await generatePlaylist(prompt, songs);
+    const songsForAI = songs.map((song: any) => ({
+      id: song.id,
+      name: song.name_song,
+      uploader: song.uploader?.name || "",
+      tags: song.song_tags?.map((st: any) => st.tag?.name_tag) || [],
+    }));
+
+    console.log("🎵 Songs being sent to AI:", songsForAI);
+
+    const playlistData = await generatePlaylist(prompt, songsForAI);
 
     return NextResponse.json(playlistData);
   } catch (error) {

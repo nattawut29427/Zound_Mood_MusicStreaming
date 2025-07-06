@@ -4,11 +4,21 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   try {
     const songs = await prisma.song.findMany({
-       include: {
+      include: {
         uploader: {
           select: {
             id: true,
-            name: true, 
+            name: true,
+          },
+        },
+        song_tags: {
+          include: {
+            tag: {
+              select: {
+                id: true,
+                name_tag: true,
+              },
+            },
           },
         },
       },
@@ -17,6 +27,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ songs });
   } catch (err: any) {
     console.error("Fetch songs failed:", err);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
