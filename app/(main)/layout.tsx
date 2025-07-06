@@ -1,4 +1,4 @@
-// app/layout.tsx
+// app/(main)/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
@@ -10,6 +10,7 @@ import { PlayerProvider } from "@/app/context/Playercontext";
 import { SessionWrapper } from "../SessionWrapper";
 import { FileProvider } from "@/app/context/Filecontext";
 import { SidebarProvider } from "@/app/context/SidebarContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,16 +33,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="font-sans bg-black text-white h-screen overflow-hidden">
-        <SessionWrapper>
+    <div
+      className={`${geistSans.variable} ${geistMono.variable} font-sans bg-black text-white h-screen `}
+    >
+      <SessionWrapper>
         <FileProvider>
           <PlayerProvider>
             <Header />
             <SidebarProvider>
               <div className="flex p-4 gap-4 h-[calc(100vh-5rem)]">
                 <Sidebar />
-                <main className="flex-1 bg-gradient-to-t from-black from-[10%] to-[#252525] overflow-y-auto">
+                <main className="flex-1 bg-gradient-to-t from-black from-[10%] to-[#252525] mb-20 overflow-y-auto w-max  h-full">
                   {children}
                 </main>
                 <Sidebar2 />
@@ -49,9 +51,8 @@ export default function RootLayout({
             </SidebarProvider>
             <Player />
           </PlayerProvider>
-          </FileProvider>
-        </SessionWrapper>
-      </body>
-    </html>
+        </FileProvider>
+      </SessionWrapper>
+    </div>
   );
 }
