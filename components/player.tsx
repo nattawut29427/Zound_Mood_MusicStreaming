@@ -30,10 +30,12 @@ export default function Player() {
     duration,
     isLooping,
     toggleLoop,
+    playNext,
+    playPrevious,
   } = usePlayer();
 
-  const signedUrl =  useSignedImage(currentTrack?.picture ?? undefined);
- 
+  const signedUrl = useSignedImage(currentTrack?.picture ?? undefined);
+
   useEffect(() => {
     const saved = localStorage.getItem("volume");
     if (saved) setVolume(parseFloat(saved));
@@ -69,9 +71,8 @@ export default function Player() {
 
   return (
     <footer className="bg-black fixed bottom-0 left-0 w-full z-50  flex items-center justify-between shadow-2xl p-2 h-20">
-      
       {/* ที่เเสดงชื่อเพลง */}
-     
+
       <Link href={`/viewsongs/${currentTrack?.id}`} className="w-1/3">
         <div className="flex items-center cursor-pointer space-x-4 pl-4">
           {currentTrack ? (
@@ -83,7 +84,7 @@ export default function Player() {
                   width={48}
                   height={48}
                   className="rounded-md aspect-[4/4] object-cover"
-                   unoptimized
+                  unoptimized
                 />
                 <div className="text-white">
                   <p className="font-semibold">{currentTrack.name_song}</p>
@@ -131,7 +132,10 @@ export default function Player() {
 
       <div className="flex  items-center space-x-4 w-1/3 pr-4 ">
         <Shuffle className="w-5 h-5 text-white hover:text-blue-500 cursor-pointer" />
-        <SkipBack className="w-6 h-6 text-white hover:text-blue-500 cursor-pointer" />
+        <SkipBack
+          className="w-6 h-6 text-white hover:text-blue-500 cursor-pointer"
+          onClick={playPrevious}
+        />
         {isPlaying ? (
           <PauseCircle
             onClick={handlePlayPause}
@@ -143,7 +147,10 @@ export default function Player() {
             className="w-9 h-9 text-white hover:text-blue-500 cursor-pointer"
           />
         )}
-        <SkipForward className="w-6 h-6 text-white hover:text-blue-500 cursor-pointer" />
+        <SkipForward
+          className="w-6 h-6 text-white hover:text-blue-500 cursor-pointer"
+          onClick={playNext}
+        />
         <Repeat
           onClick={toggleLoop}
           className={`w-5 h-5 cursor-pointer transition-colors ${

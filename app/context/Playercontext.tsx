@@ -18,12 +18,18 @@ type PlayerContextType = {
   position: number;
   duration: number;
   isLooping: boolean;
-  playSong: (song: Song) => void;
+  queue: Song[];
+  queueIndex: number;
+  playNext: () => void;
+  playPrevious: () => void;
+  playSong: (song: Song, queue?: Song[]) => void;
   pause: () => void;
   resume: () => void;
   seek: (pos: number) => void;
   setVolume: (vol: number) => void;
   toggleLoop: () => void;
+  setQueue: (songs: Song[]) => void;
+  playQueue: (songs: Song[], startIndex: number) => void;
 };
 
 export const PlayerContext = createContext<PlayerContextType>(
@@ -39,8 +45,19 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [duration, setDuration] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
 
+  const [queue, setQueue] = useState<Song[]>([]);
+  const [queueIndex, setQueueIndex] = useState<number>(0);
+
   // ใช้ useCachedSignedUrl เพื่อแคช signed url
   const signedUrl = useCachedSignedUrl(currentTrack?.audio_url);
+
+  const playQueue = (songs: Song[], startIndex: number) => {
+    if (songs.length === 0) return;
+
+    setQueue(songs);
+    setQueueIndex(startIndex);
+    setCurrentTrack(songs[startIndex]);
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,6 +67,29 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     }, 500);
     return () => clearInterval(interval);
   }, [sound, isPlaying]);
+
+  const playNext = () => {
+    console.log(" Queue length:", queue.length);
+    console.log(
+      "Queue songs:",
+      queue.map((s, i) => `${i + 1}. ${s.name_song}`)
+    );
+    setQueueIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      if (nextIndex < queue.length) {
+        setCurrentTrack(queue[nextIndex]);
+        return nextIndex;
+      }
+      return prevIndex;
+    });
+  };
+
+  const playPrevious = () => {
+    if (queueIndex > 0) {
+      setQueueIndex(queueIndex - 1);
+      setCurrentTrack(queue[queueIndex - 1]);
+    }
+  };
 
   // เล่นเพลงเมื่อ signedUrl เปลี่ยน (ได้ URL ที่แคชแล้ว)
   useEffect(() => {
@@ -67,12 +107,12 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
       onplay: () => {
         setIsPlaying(true);
-        setDuration(newSound.duration()); 
+        setDuration(newSound.duration());
       },
       onend: () => {
-        setIsPlaying(false);
         if (!isLooping) {
           setIsPlaying(false);
+          playNext();
         }
       },
     });
@@ -148,6 +188,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   return (
     <PlayerContext.Provider
       value={{
+        playQueue,
         currentTrack,
         isPlaying,
         volume,
@@ -155,11 +196,16 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         duration,
         isLooping,
         playSong,
+        queue,
+        queueIndex,
         pause,
         resume,
         seek,
         setVolume,
         toggleLoop,
+        playNext,
+        playPrevious,
+        setQueue: (songs) => setQueue(songs),
       }}
     >
       {children}

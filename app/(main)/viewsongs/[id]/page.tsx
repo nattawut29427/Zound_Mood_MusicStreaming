@@ -5,6 +5,7 @@ import AddToPlaylistButton from "@/components/Plus";
 import Image from "next/image";
 import SongDetailControls from "@/components/SongdetailControl";
 
+
 export default async function SongDetailPage({
   params,
 }: {
@@ -25,7 +26,7 @@ export default async function SongDetailPage({
       <div className="flex p-10 space-x-10 bg-black/60 ">
         {/* ปกเพลง */}
         <div className="relative">
-          <SongCover picture={song.picture ?? ""} name={song.name_song} />
+          <SongCover picture={song.picture || "/default-cover.jpg"} name={song.name_song} />
         </div>
 
         {/* ข้อมูลเพลง */}
