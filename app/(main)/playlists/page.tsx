@@ -29,9 +29,9 @@ export default async function SongDetailPage() {
   return (
     <>
     <div className="p-10 space-y-10">
-
+      <h1 className="text-white font-bold text-4xl">Your Playlists</h1>
     </div>
-    <div className="grid lg:grid-cols-6 gap-4">
+    <div className="grid lg:grid-cols-6 gap-4 px-10  space-y-10">
       {playlists.map((playlist) => (
           <Link key={playlist.id} href={`/playlists/${playlist.id}`}>
           <div className="rounded-lg cursor-pointer hover:opacity-80 transition p-2">
@@ -51,6 +51,6 @@ export default async function SongDetailPage() {
         </Link>
       ))}
     </div>
-      </>
+    </>
   );
 }
