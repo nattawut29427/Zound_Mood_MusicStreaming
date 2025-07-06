@@ -1,16 +1,8 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
+import { Song } from "@/components/types";
 
-type Song = {
-  id: string;
-  title: string;
-  artist: string;
-  genre: string;
-  mood: string;
-};
-
-export default function Home() {
+const Index = () => {
   const [prompt, setPrompt] = useState("");
   const [playlist, setPlaylist] = useState<string[]>([]);
   const [reason, setReason] = useState("");
@@ -27,15 +19,15 @@ export default function Home() {
 
   const [songIds, setSongIds] = useState<string[]>([]);
 
-  // โหลดเพลงจาก API /api/songs
+  // Load songs from API /api/songs
   useEffect(() => {
     async function fetchSongs() {
       try {
         const res = await fetch("/api/song");
         const data = await res.json();
-        setSongs(data.songs || []);
+        setSongs(data.songs as Song[]);
       } catch {
-        alert("โหลดเพลงไม่สำเร็จ");
+        setError("Failed to load songs");
       } finally {
         setLoadingSongs(false);
       }
@@ -53,20 +45,20 @@ export default function Home() {
       const res = await fetch("/api/generate-playlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, songs }), // ใช้ songs ที่โหลดมาจาก DB
+        body: JSON.stringify({ prompt, songs }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "เกิดข้อผิดพลาด");
+        setError(data.error || "An error occurred");
       } else {
         setPlaylist(data.playlist || []);
         setSongIds(data.playlist || []);
         setReason(data.reason || "");
       }
     } catch {
-      setError("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      setError("Connection error occurred");
     } finally {
       setLoading(false);
     }
@@ -80,109 +72,129 @@ export default function Home() {
         body: JSON.stringify({
           name_playlist: playlistName,
           picture: pictureUrl,
-          song: songIds.map(Number), // แปลงเป็น number ถ้าจำเป็น
+          song: songIds.map(Number),
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert("บันทึกไม่สำเร็จ: " + data.error);
+        setError("Save failed: " + data.error);
         return;
       }
 
-      alert("บันทึก Playlist สำเร็จ!");
+      alert("Playlist saved successfully!");
     } catch {
-      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      setError("Connection error occurred");
     }
   }
 
   return (
-    <main style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif" }}>
-      <h1>🎵 สร้าง Playlist ด้วย AI</h1>
+    <main className="max-w-2xl mx-auto my-8 p-6 font-sans bg-white rounded-lg shadow-lg">
+      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+        🎵 สร้าง Playlist ด้วย AI
+      </h1>
 
       <textarea
         placeholder="อยากฟังเพลงแบบไหน เช่น เพลงเหงา ๆ วันที่ฝนตก"
         rows={3}
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        style={{ width: "100%", padding: 8, fontSize: 16 }}
+        className="w-full p-3 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
       />
 
       <button
         onClick={handleGenerate}
         disabled={loading || !prompt.trim() || loadingSongs}
-        style={{ marginTop: 12, padding: "8px 16px", fontSize: 16 }}
+        className="mt-3 px-4 py-2 text-base bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {loading ? "กำลังสร้าง..." : "สร้าง Playlist"}
       </button>
 
-      {error && <p style={{ color: "red", marginTop: 12 }}>{error}</p>}
+      {error && <p className="text-red-500 mt-3">{error}</p>}
 
-      <h2>🎶 เพลงจากฐานข้อมูล</h2>
+      <h2 className="text-2xl font-semibold mt-8 mb-4 text-gray-700">
+        🎶 เพลงจากฐานข้อมูล
+      </h2>
       {loadingSongs ? (
-        <p>กำลังโหลดเพลง...</p>
+        <p className="text-gray-600">กำลังโหลดเพลง...</p>
       ) : (
-        <ul>
+        <ul className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-md p-3">
           {songs.map((song) => (
-            <li key={song.id}>
-              {song.name_song}  {song.artist}
+            <li
+              key={song.id}
+              className="text-gray-700 py-1 border-b border-gray-100 last:border-b-0"
+            >
+              <span className="font-medium">{song.name_song}</span> -{" "}
+              <span className="text-gray-600">{song.uploader?.name}</span>
             </li>
           ))}
         </ul>
       )}
 
       {playlist.length > 0 && (
-        <>
-          <h2>🎧 Playlist ที่ได้</h2>
-          <ol>
-            {playlist.map((id) => {
-              const song = songs.find((s) => s.id === id);
-              return <li key={id}>{song ? `${song.title} - ${song.artist}` : id}</li>;
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-700">
+            🎧 Playlist ที่ได้
+          </h2>
+          <ol className="space-y-2 bg-gray-50 p-4 rounded-md">
+            {playlist.map((id, index) => {
+              const song = songs.find((s) => s.id === Number(id));
+              return (
+                <li key={id} className="flex items-center space-x-3">
+                  <span className="bg-blue-500 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                    {index + 1}
+                  </span>
+                  <span className="text-gray-700">
+                    <span>{song ? `${song.name_song} - ${song.uploader?.name || song.uploaded_by}` : id}</span>
+
+
+                  </span>
+                </li>
+              );
             })}
           </ol>
 
           {reason && (
-            <div
-              style={{
-                marginTop: 16,
-                padding: 12,
-                backgroundColor: "#f0f0f0",
-                borderRadius: 6,
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              <h3>📝 เหตุผลที่ AI เลือกเพลงเหล่านี้:</h3>
-              <p>{reason}</p>
+            <div className="mt-4 p-4 bg-gray-100 rounded-md">
+              <h3 className="text-lg font-semibold mb-2 text-gray-700">
+                📝 เหตุผลที่ AI เลือกเพลงเหล่านี้:
+              </h3>
+              <p className="text-gray-600 whitespace-pre-wrap">{reason}</p>
             </div>
           )}
 
-          <hr style={{ margin: "24px 0" }} />
+          <hr className="my-6 border-gray-300" />
 
-          <h3>💾 บันทึก Playlist</h3>
-          <input
-            type="text"
-            value={playlistName}
-            onChange={(e) => setPlaylistName(e.target.value)}
-            placeholder="ชื่อ Playlist"
-            style={{ width: "100%", padding: 8, fontSize: 16, marginBottom: 8 }}
-          />
-          <input
-            type="text"
-            value={pictureUrl}
-            onChange={(e) => setPictureUrl(e.target.value)}
-            placeholder="ลิงก์รูปภาพ Playlist"
-            style={{ width: "100%", padding: 8, fontSize: 16, marginBottom: 12 }}
-          />
-          <button
-            onClick={handleSavePlaylist}
-            style={{ padding: "8px 16px", fontSize: 16 }}
-            className="cursor-pointer bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-          >
-            💾 Save Playlist
-          </button>
-        </>
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-gray-700">
+              💾 บันทึก Playlist
+            </h3>
+            <input
+              type="text"
+              value={playlistName}
+              onChange={(e) => setPlaylistName(e.target.value)}
+              placeholder="ชื่อ Playlist"
+              className="w-full p-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <input
+              type="text"
+              value={pictureUrl}
+              onChange={(e) => setPictureUrl(e.target.value)}
+              placeholder="ลิงก์รูปภาพ Playlist"
+              className="w-full p-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              onClick={handleSavePlaylist}
+              className="px-4 py-2 text-base bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors cursor-pointer"
+            >
+              💾 Save Playlist
+            </button>
+          </div>
+        </div>
       )}
     </main>
   );
-}
+};
+
+export default Index;
