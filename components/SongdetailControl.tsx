@@ -9,26 +9,36 @@ type Props = {
 };
 
 export default function SongDetailControls({ song }: Props) {
-  const { currentTrack, isPlaying, resume, pause } = usePlayer();
+  const { currentTrack, isPlaying, resume, pause, playSong } = usePlayer();
 
-  const isCurrentSongPlaying = isPlaying && currentTrack?.id === song.id;
+  const isCurrentSong = currentTrack?.id === song.id;
+  const isCurrentSongPlaying = isPlaying && isCurrentSong;
 
-  const handlePlayPause = () => {
-    if (isPlaying) pause();
-    else resume();
+
+  const handleClick = () => {
+    if (!isCurrentSong) {
+      // ถ้าไม่ใช่เพลงปัจจุบัน → เปลี่ยนเพลง
+      playSong(song);
+    } else if (isPlaying) {
+      // ถ้าเล่นอยู่ → หยุด
+      pause();
+    } else {
+      // ถ้าเพลงนี้ใช่ และหยุดอยู่ → resume
+      resume();
+    }
   };
 
   return (
     <div>
       {isCurrentSongPlaying ? (
         <PauseCircle
-          onClick={handlePlayPause}
-          className="w-9 h-9 text-blue-500 cursor-pointer transition-transform duration-200 scale-110"
+          onClick={handleClick}
+          className="w-12 h-12 text-blue-500 cursor-pointer transition-transform duration-200 scale-110"
         />
       ) : (
         <CirclePlay
-          onClick={handlePlayPause}
-          className="w-9 h-9 text-white hover:text-blue-500 cursor-pointer"
+          onClick={handleClick}
+          className="w-12 h-12 text-white hover:text-blue-500 cursor-pointer"
         />
       )}
     </div>
