@@ -73,6 +73,7 @@ model Song {
   picture    String?
   audio_url  String      @unique
   like       Int         @default(0)
+  description String?
   uploaded_by String
   created_at DateTime    @default(now())
 
@@ -116,6 +117,8 @@ model LikeSong {
 
   user       User      @relation(fields: [user_id], references: [id])
   song       Song      @relation(fields: [song_id], references: [id])
+
+  @@unique([user_id, song_id], name: "user_id_song_id")
 }
 
 model Follow {

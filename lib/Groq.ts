@@ -15,6 +15,8 @@ export async function generatePlaylist(prompt: string, songs: any[]) {
 ข้อมูลเพลง:
 ${JSON.stringify(songs, null, 2)}
 
+โปรดเลือกเพลงจากข้อมูลด้านบนที่เหมาะสมที่สุดกับคำขอของผู้ใช้ ค้นหาเพลงนีเป็นอย่างไรก่อนเลือก
+
 โปรดตอบกลับเฉพาะ JSON ในรูปแบบนี้อย่างเดียว:
 {
   "playlist": [/* รหัสเพลงที่เลือก (string array) */],
@@ -34,7 +36,7 @@ ${JSON.stringify(songs, null, 2)}
       },
       { role: "user", content: fullPrompt },
     ],
-    temperature: 0.7,
+    temperature: 0.5,
   });
 
   const reply = res.choices[0].message.content;

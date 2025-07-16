@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import SongCover from "@/components/Songcover";
-import { Heart, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 import AddToPlaylistButton from "@/components/Plus";
 import Image from "next/image";
 import SongDetailControls from "@/components/SongdetailControl";
-
+import Likebutton from "@/components/Likebutton";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export default async function SongDetailPage({
   params,
@@ -12,6 +14,22 @@ export default async function SongDetailPage({
   params: { id: string };
 }) {
   const resolvedParams = await params;
+
+    const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return <div className="text-white">Unauthorized</div>;
+  }
+
+  const likedRecord = await prisma.likeSong.findUnique({
+    where: {
+      user_id_song_id: {
+        user_id: session.user.id,
+        song_id: session.user.id ? Number(resolvedParams.id) : 0, 
+      },
+    },
+  });
+
+  const isLiked = !!likedRecord;
 
   const song = await prisma.song.findUnique({
     where: { id: Number(resolvedParams.id) }, // ใช้ resolvedParams.id
@@ -26,7 +44,10 @@ export default async function SongDetailPage({
       <div className="flex p-10 space-x-10 bg-black/60 ">
         {/* ปกเพลง */}
         <div className="relative">
-          <SongCover picture={song.picture || "/default-cover.jpg"} name={song.name_song} />
+          <SongCover
+            picture={song.picture || "/default-cover.jpg"}
+            name={song.name_song}
+          />
         </div>
 
         {/* ข้อมูลเพลง */}
@@ -41,7 +62,7 @@ export default async function SongDetailPage({
             </div>
             <div className="text-sm px-4 py-1 rounded-full">
               <div className="flex space-x-6">
-                <Heart className="w-8 h-8  hover:text-red-500 cursor-pointer" />
+                <Likebutton songId={song.id} initialLiked={isLiked}/>
                 <AddToPlaylistButton
                   songId={song.id}
                   picture={song.picture ?? ""}

@@ -18,8 +18,8 @@ export default function Page() {
   };
   return (
     <>
-      <div className="text-white font-bold text-3xl">Upload your song</div>
-      <div className="flex items-center justify-center">
+      <div className="text-white p-10 font-bold text-3xl">Upload your song</div>
+      <div className="flex p-10 items-center justify-center">
         <div className="w-full max-w-screen mt-10">
           <label
             htmlFor="file-upload"

@@ -33,7 +33,7 @@ export default async function SongDetailPage() {
     </div>
     <div className="grid lg:grid-cols-6 gap-4 px-10  space-y-10">
       {playlists.map((playlist) => (
-          <Link key={playlist.id} href={`/playlists/${playlist.id}`}>
+          <Link key={playlist.id} href={`/you/playlists/${playlist.id}`}>
           <div className="rounded-lg cursor-pointer hover:opacity-80 transition p-2">
             <PlaylistCover
               picture={playlist.pic_playlists ?? ""}

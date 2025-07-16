@@ -10,7 +10,7 @@ import { PlayerProvider } from "@/app/context/Playercontext";
 import { SessionWrapper } from "../SessionWrapper";
 import { FileProvider } from "@/app/context/Filecontext";
 import { SidebarProvider } from "@/app/context/SidebarContext";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { GeneratedPlaylistProvider } from "@/app/context/GeneratedPlaylistContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,9 +43,11 @@ export default function RootLayout({
             <SidebarProvider>
               <div className="flex p-4 gap-4 h-[calc(100vh-5rem)]">
                 <Sidebar />
+                <GeneratedPlaylistProvider>
                 <main className="flex-1 bg-gradient-to-t from-black from-[10%] to-[#252525] mb-20 overflow-y-auto w-max  h-full">
                   {children}
                 </main>
+                </GeneratedPlaylistProvider>
                 <Sidebar2 />
               </div>
             </SidebarProvider>

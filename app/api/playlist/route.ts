@@ -69,3 +69,42 @@ export async function POST(req: Request) {
 
   return NextResponse.json(playlist);
 }
+
+export async function PUT(req: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { playlistId, songId } = await req.json();
+
+  if (!playlistId || !songId) {
+    return NextResponse.json({ error: 'Playlist ID and Song ID are required' }, { status: 400 });
+  }
+
+  try {
+    const playlist = await prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        user_id: session.user.id,
+      },
+    });
+
+    if (!playlist) {
+      return NextResponse.json({ error: 'Playlist not found or you do not have permission to modify it.' }, { status: 404 });
+    }
+
+    const updatedPlaylist = await prisma.playlistSong.create({
+      data: {
+        playlist_id: playlistId,
+        song_id: songId,
+      },
+    });
+
+    return NextResponse.json(updatedPlaylist);
+  } catch (error) {
+    console.error('Failed to add song to playlist:', error);
+    return NextResponse.json({ error: 'Failed to add song to playlist' }, { status: 500 });
+  }
+}

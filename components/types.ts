@@ -11,6 +11,7 @@ export interface Song {
   name_song: string;
   audio_url: string;
   picture: string | null;
+  description?: string | null;
   uploaded_by: string;
   uploader?: Uploader | null;
 }
@@ -23,3 +24,4 @@ export interface Song {
 //   picture: string | null;
 //   uploader: Uploader;
 // }
+

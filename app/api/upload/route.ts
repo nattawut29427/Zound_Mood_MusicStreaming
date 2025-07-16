@@ -27,10 +27,11 @@ export async function POST(req: NextRequest) {
       uploaded_by,
       pictureKey,
       tag,
+      description,
     } = body;
 
 
-    if (!name_song || !audio_urlKey || !uploaded_by || !pictureKey || !tag) {
+    if (!name_song || !audio_urlKey || !uploaded_by || !pictureKey || !tag || !description) {
 
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
         audio_url: audio_urlKey,
         uploaded_by,
         picture: pictureKey,
+        description: description,
       },
       select: {
         id: true,
@@ -49,6 +51,7 @@ export async function POST(req: NextRequest) {
         uploaded_by: true,
         created_at: true,
         picture: true,
+        description: true, 
       },
     });
 

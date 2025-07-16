@@ -90,9 +90,9 @@ export default function Page() {
 
   return (
     <div className="text-white">
-      <div className="font-bold text-3xl mb-8">Upload your song</div>
+      <div className="font-bold p-10 text-3xl mb-8">Upload your song</div>
 
-      <div className="flex flex-wrap gap-4 justify-between">
+      <div className="flex p-10 flex-wrap gap-4 justify-between">
         <div className="w-72">
           <label
             htmlFor="file-upload"

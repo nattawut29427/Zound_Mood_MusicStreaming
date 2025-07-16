@@ -37,7 +37,7 @@ export default function Header() {
           </Button>
         </Link>
         <div className="bg-white h-10 rounded-full w-1 bg-gradient-to-b from-red-500 to-pink-400"></div>
-        <Link href="/upload">
+        <Link href="/newupload">
           <Button
             size="lg"
             className="rounded-full text-white cursor-pointer"

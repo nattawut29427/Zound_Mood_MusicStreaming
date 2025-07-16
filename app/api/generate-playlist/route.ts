@@ -17,6 +17,7 @@ export async function POST(req: Request) {
       name: song.name_song,
       uploader: song.uploader?.name || "",
       tags: song.song_tags?.map((st: any) => st.tag?.name_tag) || [],
+      description: song.description || "",
     }));
 
     console.log("🎵 Songs being sent to AI:", songsForAI);
