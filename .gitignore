@@ -40,4 +40,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Prisma client
 /lib/generated/prisma
+
+# Docker related
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Docker volume
+postgres-data/
