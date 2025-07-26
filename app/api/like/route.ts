@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       });
       return NextResponse.json({ liked: false });
     } else {
-      // ❤️ Like
+      
       await prisma.likeSong.create({
         data: {
           user: { connect: { id: session.user.id } },
