@@ -5,6 +5,9 @@ import { useSidebar } from "@/app/context/SidebarContext";
 import SongCover from "./Songcover";
 import { Allplaylist } from "@/components/Allplaylist";
 import { uploadImageToR2 } from "@/lib/uploadImage";
+import { SimpleEditor } from "./tiptap-templates/simple/simple-editor";
+
+
 
 export default function Sidebar2() {
   const { view, selectedSong, setView } = useSidebar();
@@ -12,13 +15,13 @@ export default function Sidebar2() {
   const [existingPlaylistId, setExistingPlaylistId] = useState<string | null>(
     null
   );
-  const [mode, setMode] = useState<"create" | "add">("create");
 
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(""); // preview ที่จะแสดง
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
 
+  const [search, setSearch] = useState("");
 
   //  เมื่อ selectedSong เปลี่ยน ให้ใช้รูปของเพลงเป็น default
   useEffect(() => {
@@ -108,99 +111,111 @@ export default function Sidebar2() {
 
   if (view === "createPlaylist") {
     return (
-      <div className="w-78 p-4 space-y-4 bg-gradient-to-t duration-200 from-black from-[10%] to-[#252525]">
-        <h2 className="text-xl font-bold pb-5">Create or Add to Playlist</h2>
+      <div className="w-80 p-4 space-y-4 bg-gradient-to-t from-black to-[#252525] duration-200 h-full flex flex-col">
+        <h2 className="text-xl font-bold pb-2">Add to Playlist</h2>
 
-        <div className="flex justify-center space-x-4 mb-6">
-          <button
-            className={`px-4 py-2 rounded ${
-              mode === "create"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-700 text-gray-300"
-            }`}
-            onClick={() => setMode("create")}
-          >
-            Create New
-          </button>
-          <button
-            className={`px-4 py-2 rounded ${
-              mode === "add"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-700 text-gray-300"
-            }`}
-            onClick={() => setMode("add")}
-          >
-            Add to Existing
-          </button>
+        {/* Search Playlist */}
+        <div className="flex-shrink-0">
+          <input
+            type="text"
+            placeholder="ค้นหา Playlist..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-10 rounded-lg px-4 bg-zinc-800 text-white placeholder-gray-400 focus:outline-none"
+          />
         </div>
 
-        {mode === "create" ? (
-          <>
-            <div className="flex flex-col items-center justify-center my-6 space-y-2">
-              <div className="space-y-4 w-48 h-fit rounded-lg ">
-                <SongCover
-                  picture={previewUrl}
-                  name="preview"
-                  
-                  onImageChange={handleImageUpload}
-                />
-              </div>
+        {/* Playlist List */}
+        <div className="flex-1 overflow-y-auto space-y-2">
+          <Allplaylist
+            onSelectPlaylist={(id) => setExistingPlaylistId(id)}
+            selectedPlaylistId={existingPlaylistId}
+            search={search}
+          />
+        </div>
 
-              {/* <button
-                onClick={() => fileInputRef.current?.click()}
-                className="text-sm text-blue-400 underline"
-              >
-                เลือกรูปภาพใหม่
-              </button> */}
+        {/* Button Zone */}
+        <div className="flex flex-col gap-3 mt-4">
+          <button
+            onClick={handleAddToPlaylist}
+            disabled={!existingPlaylistId}
+            className="w-full py-2 rounded-lg bg-white text-black font-semibold disabled:opacity-40"
+          >
+            ✅ Add to Playlist
+          </button>
 
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
+          <button
+            onClick={() => setView("createNewPlaylist")}
+            className="w-full py-2 rounded-full bg-neutral-800 text-white border border-white"
+          >
+             Create New Playlist
+          </button>
 
-            <input
-              className="w-full p-2 rounded bg-neutral-700"
-              placeholder="Playlist name"
-              value={playlistName}
-              onChange={(e) => setPlaylistName(e.target.value)}
+          <button
+            onClick={() => setView(null)}
+            className="w-full py-2 rounded-lg bg-zinc-700 text-white"
+          >
+            ❌ Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "createNewPlaylist") {
+    return (
+      <div className="w-80 p-4 space-y-4 bg-gradient-to-t from-black to-[#252525] duration-200 h-full flex flex-col">
+        <h2 className="text-xl font-bold pb-2">Create Playlist</h2>
+
+        <div className="flex flex-col items-center justify-center my-2 space-y-2">
+          <div className="space-y-4 w-48 h-fit rounded-lg">
+            <SongCover
+              picture={previewUrl}
+              name="preview"
+              onImageChange={handleImageUpload}
             />
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
 
-            {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+        <input
+          className="w-full p-2 rounded bg-neutral-700"
+          placeholder="Playlist name"
+          value={playlistName}
+          onChange={(e) => setPlaylistName(e.target.value)}
+        />
 
-            <button
-              onClick={handleCreate}
-              className="bg-white text-black px-3 py-1 rounded mt-4"
-            >
-              Create Playlist
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="text-lg font-semibold mb-2">Select a Playlist</p>
-            <Allplaylist
-              onSelectPlaylist={setExistingPlaylistId}
-              selectedPlaylistId={existingPlaylistId}
-            />
-            <button
-              onClick={handleAddToPlaylist}
-              className="bg-white text-black px-3 py-1 rounded mt-4"
-              disabled={!existingPlaylistId}
-            >
-              Add to Playlist
-            </button>
-          </>
-        )}
+        {error && <p className="text-red-400 text-sm">{error}</p>}
 
-        <button
-          onClick={() => setView(null)}
-          className="bg-neutral-600 text-white px-3 py-1 rounded mt-4"
-        >
-          Cancel
-        </button>
+        <div className="flex flex-col gap-3 mt-4">
+          <button
+            onClick={handleCreate}
+            className="w-full py-2 rounded-lg bg-white text-black font-semibold"
+          >
+            ✅ Create Playlist
+          </button>
+
+          <button
+            onClick={() => setView("createPlaylist")}
+            className="w-full py-2 rounded-lg bg-zinc-700 text-white"
+          >
+            🔙 Back to Playlist
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "createDiary") {
+    return (
+      <div className="duration-300">
+        <SimpleEditor />
       </div>
     );
   }

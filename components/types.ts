@@ -16,6 +16,18 @@ export interface Song {
   uploader?: Uploader | null;
 }
 
+export interface Diary {
+  id: number;
+  name_diary: string;
+  content: string; // HTML content
+  song_id: number;
+  user_id: string;
+  is_private: boolean;
+  created_at: Date;
+  song?: Song | null; // Optional relation
+  user?: Uploader | null; // Optional relation
+}
+
 
 // export interface Song {
 //   id: number;

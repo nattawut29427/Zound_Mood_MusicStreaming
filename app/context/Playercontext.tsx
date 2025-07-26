@@ -169,10 +169,16 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ควบคุม pause/play ด้วย spacebar
+  //controll play/puses with spacebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
+      const tag = (e.target as HTMLElement).tagName.toLowerCase();
+      const isTyping =
+        tag === "input" ||
+        tag === "textarea" ||
+        (e.target as HTMLElement).isContentEditable;
+
+      if (e.code === "Space" && !isTyping) {
         e.preventDefault();
         if (isPlaying) {
           pause();
@@ -181,6 +187,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPlaying]);

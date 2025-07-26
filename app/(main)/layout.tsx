@@ -11,6 +11,8 @@ import { SessionWrapper } from "../SessionWrapper";
 import { FileProvider } from "@/app/context/Filecontext";
 import { SidebarProvider } from "@/app/context/SidebarContext";
 import { GeneratedPlaylistProvider } from "@/app/context/GeneratedPlaylistContext";
+import PathWatcher from "@/components/path/PathWatcher"; 
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +43,7 @@ export default function RootLayout({
           <PlayerProvider>
             <Header />
             <SidebarProvider>
+              <PathWatcher />
               <div className="flex p-4 gap-4 h-[calc(100vh-5rem)]">
                 <Sidebar />
                 <GeneratedPlaylistProvider>

@@ -1,7 +1,7 @@
 // context/SidebarContext.tsx
 "use client";
 import React, { createContext, useContext, useState, ReactNode } from "react";
-type SidebarView = "default" | "createPlaylist";
+type SidebarView = "default" | "createPlaylist" | "createDiary" | "createNewPlaylist";
 
 interface SidebarContextType {
   view: SidebarView;

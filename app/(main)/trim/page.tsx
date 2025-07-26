@@ -1,103 +1,176 @@
+// app/select-music/page.tsx
 "use client";
 
-import { useState } from "react";
-import { Howl } from "howler";
+import { useState, useEffect, useCallback } from "react";
+import { usePlayer } from "@/app/context/Playercontext";
+import { Song } from "@/components/types";
+import styles from "./SelectMusic.module.css";
 
-export default function AudioTrimPreviewer() {
-  const [file, setFile] = useState<File | null>(null);
-  const [startTime, setStartTime] = useState(0);
-  const [duration, setDuration] = useState(30);
-  const [uploadedUrl, setUploadedUrl] = useState("");
+const formatTime = (secs: number) => {
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
+};
 
-  const handlePreview = () => {
-    if (!file) return;
-    const sound = new Howl({
-      src: [URL.createObjectURL(file)],
-      html5: true,
-      onplay: () => {
-        sound.seek(startTime);
-        setTimeout(() => sound.pause(), duration * 1000);
-      },
-    });
-    sound.play();
+const getR2KeyFromUrl = (url: string): string => {
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    const p = new URL(url).pathname.substring(1);
+    return `storagemusic/${p}`;
+  }
+  return `storagemusic/${url}`;
+};
+
+export default function SelectMusicPage() {
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [clipStart, setClipStart] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const { playSong, pause, seek, duration, position, isPlaying, currentTrack, resume } = usePlayer(); // เพิ่ม resume
+
+  // Fetch songs from our API endpoint
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const response = await fetch("/api/song"); // ตรวจสอบว่า API Route นี้ถูกต้อง
+        if (!response.ok) {
+          throw new Error("Failed to fetch songs");
+        }
+        const data = await response.json();
+        setSongs(data.songs);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+    fetchSongs();
+  }, []);
+
+  // Handle selecting a song from the list
+  const handleSelectSong = (song: Song) => {
+    setSelectedSong(song);
+    playSong(song); // Play the song using context
+    setClipStart(0); // Reset clip start time
+    setSubmitMessage(null);
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
+  // Handle slider change to select the start time of the clip
+  // ใช้ useCallback เพื่อป้องกันการ re-render โดยไม่จำเป็น
+  const handleClipChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newStart = parseInt(e.target.value, 10);
+    setClipStart(newStart);
+    // Seek to the new start time and ensure it's playing
+    seek(newStart);
+    if (!isPlaying) { // ถ้าไม่ได้เล่นอยู่ ให้ resume เพื่อให้ผู้ใช้ได้ยินพรีวิว
+      resume();
+    }
+  }, [isPlaying, seek, resume]); // Dependencies for useCallback
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("start", String(startTime));
-    formData.append("duration", String(duration));
+
+  // Handle the final submission to the API
+  const handleConfirmSelection = async () => {
+    if (!selectedSong) {
+      setSubmitMessage("กรุณาเลือกเพลงก่อน");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitMessage(null);
+    pause(); // Pause player before submitting
+
+    // **** แก้ไขตรงนี้: แปลง audio_url ให้เป็น r2Key ที่ถูกต้อง ****
+    const r2KeyToSend = getR2KeyFromUrl(selectedSong.audio_url);
+
+    // Data to be sent to the API
+    const payload = {
+      r2Key: r2KeyToSend, // ใช้ r2Key ที่ถูกต้อง
+      start: clipStart,
+      duration: 30, // Fixed duration as per requirement
+    };
 
     try {
-      const res = await fetch("/api/trim", {
+      const response = await fetch("/api/process-r2-audio", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const text = await res.text(); // fallback ถ้าไม่ใช่ JSON
-        console.error("❌ Upload failed:", text);
-        alert("เกิดข้อผิดพลาดในการตัดเสียง");
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "API request failed");
       }
 
-      const json = await res.json();
-      setUploadedUrl(json.url);
-    } catch (err) {
-      console.error("❌ Error:", err);
-      alert("เกิดข้อผิดพลาดในการอัปโหลด");
+      const result = await response.json();
+      setSubmitMessage(`สำเร็จ! URL เพลงที่ตัดแล้ว: ${result.trimmedAudioUrl}`);
+      // คุณอาจจะเพิ่ม Logic เพื่อเล่นเพลงที่ตัดแล้ว หรือดาวน์โหลด
+    } catch (err: any) {
+      setSubmitMessage(`เกิดข้อผิดพลาด: ${err.message}`);
+      setError(`ข้อผิดพลาด: ${err.message}`); // แสดง error ใน state error ด้วย
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="space-y-4 p-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold">🎧 ตัดเสียง + Upload R2</h1>
-      <input
-        type="file"
-        accept="audio/*"
-        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-      />
-      <div>
-        Start Time (s):{" "}
-        <input
-          type="number"
-          value={startTime}
-          onChange={(e) => setStartTime(Number(e.target.value))}
-        />
-      </div>
-      <div>
-        Duration (s):{" "}
-        <input
-          type="number"
-          value={duration}
-          onChange={(e) => setDuration(Number(e.target.value))}
-        />
-      </div>
-      <button
-        onClick={handlePreview}
-        className="px-4 py-2 bg-yellow-500 text-white rounded"
-      >
-        🔊 Preview
-      </button>
-      <button
-        onClick={handleUpload}
-        className="px-4 py-2 bg-green-600 text-white rounded"
-      >
-        ☁️ ตัด + อัปโหลด
-      </button>
+  // Calculate max value for the range slider
+  const sliderMax = duration > 30 ? Math.floor(duration - 30) : 0; // ใช้ Math.floor เพื่อให้เป็นจำนวนเต็ม
 
-      {uploadedUrl && (
-        <div>
-          ✅ ไฟล์อัปโหลด:{" "}
-          <a
-            href={uploadedUrl}
-            target="_blank"
-            className="underline text-blue-600"
+  return (
+    <div className={styles.container}>
+      <h1>เลือกเพลงสำหรับสตอรี่ของคุณ</h1>
+      {error && <p className={styles.error}>Error: {error}</p>}
+
+      <div className={styles.songList}>
+        {songs.length === 0 && !error ? (
+          <p>กำลังโหลดเพลง...</p>
+        ) : songs.map((song) => (
+          <div
+            key={song.id} // ใช้ song.id เป็น key
+            className={`${styles.songItem} ${
+              selectedSong?.id === song.id ? styles.selected : ""
+            }`}
+            onClick={() => handleSelectSong(song)}
           >
-            ดู / ดาวน์โหลด
-          </a>
+            <img src={song.picture} alt={song.name_song} className={styles.songImage} />
+            <div>
+              <p className={styles.songName}>{song.name_song}</p>
+              {/* ตรวจสอบว่ามี artist_name หรือไม่ ถ้ามีก็แสดง */}
+              {song.artist_name && <p className={styles.songArtist}>{song.artist_name}</p>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {selectedSong && currentTrack?.id === selectedSong.id && (
+        <div className={styles.trimmerSection}>
+          <h2>เลือกช่วงเวลา (30 วินาที)</h2>
+          <div className={styles.player}>
+             <div className={styles.timeDisplay}>
+                <span>{formatTime(position)}</span> / <span>{formatTime(duration)}</span>
+             </div>
+             <input
+                type="range"
+                min="0"
+                max={sliderMax}
+                value={clipStart}
+                onChange={handleClipChange}
+                className={styles.slider}
+                disabled={duration <= 30}
+              />
+              {duration <= 30 && <p className={styles.warning}>เพลงนี้สั้นกว่า 30 วินาที ไม่สามารถเลือกช่วงได้</p>}
+          </div>
+
+          <button
+            onClick={handleConfirmSelection}
+            disabled={isSubmitting || duration <= 30 || !selectedSong} // เพิ่ม disabled ถ้าไม่มีเพลงเลือก
+            className={styles.confirmButton}
+          >
+            {isSubmitting ? "กำลังประมวลผล..." : "ยืนยัน"}
+          </button>
+
+          {submitMessage && <p className={styles.submitMessage}>{submitMessage}</p>}
         </div>
       )}
     </div>

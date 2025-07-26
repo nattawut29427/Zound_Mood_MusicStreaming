@@ -142,7 +142,20 @@
   body {
     @apply bg-background text-foreground;
   }
+  
 }
+
+.ProseMirror img {
+  max-width: 400px;   /* ขนาดกว้างสูงสุดที่ต้องการ */
+  max-height: 300px;  /* ขนาดสูงสุด */
+  width: auto;
+  height: auto;
+  object-fit: contain; /* ให้รูปไม่ถูกยืดหรือบีบ */
+  border-radius: 0.5rem; /* ถ้าต้องการมุมโค้งเหมือน container */
+  user-select: none; /* ป้องกันเลือกตัวรูป */
+  pointer-events: auto; /* ให้ลากได้ */
+}
+
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -153,3 +166,16 @@
   border-radius: 6px;
 }
 
+
+h1 {
+  font-size: 2em;
+  font-weight: bold;
+}
+h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+h3 {
+  font-size: 1.17em;
+  font-weight: bold;
+}
