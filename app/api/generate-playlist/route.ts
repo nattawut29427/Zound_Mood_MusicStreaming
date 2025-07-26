@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       description: song.description || "",
     }));
 
-    console.log("🎵 Songs being sent to AI:", songsForAI);
+    console.log("Songs being sent to AI:", songsForAI);
 
     const playlistData = await generatePlaylist(prompt, songsForAI);
 
