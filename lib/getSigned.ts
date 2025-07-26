@@ -5,3 +5,4 @@ export async function getSignedPictureUrl(key: string): Promise<string> {
   const data = await res.json();
   return data.url;
 }
+
