@@ -196,7 +196,6 @@ export function SimpleEditor() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
-
   const isMobile = useIsMobile();
   const windowSize = useWindowSize();
   const [mobileView, setMobileView] = React.useState<
@@ -243,7 +242,6 @@ export function SimpleEditor() {
         limit: 3,
         upload: handleImageUpload,
         onError: (error) => console.error("Upload failed:", error),
-        
       }),
     ],
   });
@@ -326,7 +324,6 @@ export function SimpleEditor() {
       }
 
       const trimmedAudioUrl = data.url;
-      
 
       // บันทึกไดอารี่ พร้อม URL เพลงที่ตัดแล้ว
       const saveRes = await fetch("/api/dairy", {
@@ -335,7 +332,7 @@ export function SimpleEditor() {
         body: JSON.stringify({
           name_diary: title,
           content: editor.getHTML(),
-         trimmed_audio_url: trimmedAudioUrl,
+          trimmed_audio_url: trimmedAudioUrl,
           song_id: selectedMusic.song_id,
           is_private: false,
           user_id: userId,
@@ -361,7 +358,7 @@ export function SimpleEditor() {
   }, [isMobile, mobileView]);
 
   return (
-    <div className="simple-editor-wrapper">
+    <div className="simple-editor-wrapper relative h-[750px] flex flex-col ">
       <EditorContext.Provider value={{ editor }}>
         <Toolbar
           ref={toolbarRef}
@@ -388,22 +385,26 @@ export function SimpleEditor() {
           )}
         </Toolbar>
 
-        <EditorContent
-          editor={editor}
-          role="presentation"
-          className="simple-editor-content"
-        />
-
-        <div className="p-4  border-t border-zinc-700">
-          <button
-            onClick={handleSubmit}
-            className="w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition"
-            type="button"
-          >
-            บันทึกไดอารี่
-          </button>
+        {/* Editor content area ให้เต็มพื้นที่ flex และเลื่อนในนั้น */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <EditorContent
+            editor={editor}
+            role="presentation"
+            className="simple-editor-content min-h-[300px]"
+          />
         </div>
       </EditorContext.Provider>
+
+      {/* ปุ่ม Save อยู่ล่างสุด ติดกับ bottom */}
+      <div className="p-4 border-t border-zinc-700 flex justify-end ">
+        <button
+          onClick={handleSubmit}
+          className="py-3 w-fit p-4 cursor-pointer rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition"
+          type="button"
+        >
+          บันทึกไดอารี่
+        </button>
+      </div>
     </div>
   );
 }

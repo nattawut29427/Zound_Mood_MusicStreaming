@@ -8,13 +8,13 @@ import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 import { Song } from "@/components/types";
 import Smallpic from "@/components/cover_pic/Smallpic";
 
-const getR2KeyFromUrl = (url: string): string => {
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    const p = new URL(url).pathname.substring(1);
-    return `storagemusic/${p}`;
-  }
-  return `storagemusic/${url}`;
-};
+// const getR2KeyFromUrl = (url: string): string => {
+//   if (url.startsWith("http://") || url.startsWith("https://")) {
+//     const p = new URL(url).pathname.substring(1);
+//     return `storagemusic/${p}`;
+//   }
+//   return `storagemusic/${url}`;
+// };
 
 export default function SelectMusicPage({
   onSelect,

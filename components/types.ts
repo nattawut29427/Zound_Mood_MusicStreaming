@@ -20,6 +20,7 @@ export interface Diary {
   id: number;
   name_diary: string;
   content: string; // HTML content
+  trimmed_audio_url: string;
   song_id: number;
   user_id: string;
   is_private: boolean;

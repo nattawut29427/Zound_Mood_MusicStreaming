@@ -1,4 +1,5 @@
 // app/api/process-r2-audio/route.ts
+import { url } from "inspector";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      url: result.url,
+      url : result.trimmedR2Key,
       trimmedR2Key: result.trimmedR2Key ?? r2Key,
     });
   } catch (error: any) {
