@@ -1,4 +1,4 @@
-// app/api/upload-url/route.ts
+// app/api/upload/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { generatePresignedPutUrl } from "@/lib/r2";
 import { prisma } from "@/lib/prisma";

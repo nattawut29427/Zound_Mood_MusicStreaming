@@ -108,3 +108,35 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'Failed to add song to playlist' }, { status: 500 });
   }
 }
+
+export async function PATCH(req: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { playlistId, name_playlist, picture } = await req.json();
+
+  if (!playlistId || !name_playlist || !picture) {
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  }
+
+  try {
+    const updatedPlaylist = await prisma.playlist.update({
+      where: {
+        id: playlistId,
+        user_id: session.user.id, 
+      },
+      data: {
+        name_playlist,
+        pic_playlists: picture,
+      },
+    });
+
+    return NextResponse.json(updatedPlaylist);
+  } catch (error) {
+    console.error("Failed to update playlist:", error);
+    return NextResponse.json({ error: "Failed to update playlist" }, { status: 500 });
+  }
+}

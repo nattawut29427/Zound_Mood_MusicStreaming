@@ -15,7 +15,7 @@ export async function GET() {
       user_id: session.user.id, // กรองเฉพาะของ user นี้
     },
     include: {
-        song: true, // รวมข้อมูลเพลงที่ถูกไลค์
+      song: true, // รวมข้อมูลเพลงที่ถูกไลค์
     },
   });
 
@@ -32,7 +32,10 @@ export async function POST(req: Request) {
   const song_id = body.song_id;
 
   if (typeof song_id !== "number") {
-    return NextResponse.json({ error: "Missing or invalid song_id. Expected a number." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing or invalid song_id. Expected a number." },
+      { status: 400 }
+    );
   }
 
   try {
@@ -47,27 +50,50 @@ export async function POST(req: Request) {
 
     if (existing) {
       // 👎 Unlike
-      await prisma.likeSong.delete({
-        where: {
-          user_id_song_id: {
-            user_id: session.user.id,
-            song_id,
+      await prisma.$transaction([
+        prisma.likeSong.delete({
+          where: {
+            user_id_song_id: {
+              user_id: session.user.id,
+              song_id,
+            },
           },
-        },
-      });
+        }),
+        prisma.songStat.update({
+          where: { song_id },
+          data: {
+            like_count: { decrement: 1 },
+          },
+        }),
+      ]);
+
       return NextResponse.json({ liked: false });
     } else {
-      
-      await prisma.likeSong.create({
-        data: {
-          user: { connect: { id: session.user.id } },
-          song: { connect: { id: song_id } },
-        },
-      });
+      // 👍 Like
+      await prisma.$transaction([
+        prisma.likeSong.create({
+          data: {
+            user: { connect: { id: session.user.id } },
+            song: { connect: { id: song_id } },
+          },
+        }),
+        prisma.songStat.upsert({
+          where: { song_id },
+          update: { like_count: { increment: 1 } },
+          create: {
+            song_id,
+            like_count: 1,
+          },
+        }),
+      ]);
+
       return NextResponse.json({ liked: true });
     }
   } catch (error) {
     console.error("Like error:", error);
-    return NextResponse.json({ error: "Failed to toggle like" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to toggle like" },
+      { status: 500 }
+    );
   }
 }
