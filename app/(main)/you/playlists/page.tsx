@@ -3,6 +3,7 @@ import PlaylistCover from "@/components/PlaylistCover";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
+import SongCover from "@/components/Songcover";
 
 export default async function SongDetailPage() {
   const session = await getServerSession(authOptions);
@@ -35,7 +36,7 @@ export default async function SongDetailPage() {
       {playlists.map((playlist) => (
           <Link key={playlist.id} href={`/you/playlists/${playlist.id}`}>
           <div className="rounded-lg cursor-pointer hover:opacity-80 transition p-2">
-            <PlaylistCover
+            <SongCover
               picture={playlist.pic_playlists ?? ""}
               name={playlist.name_playlist}
               />

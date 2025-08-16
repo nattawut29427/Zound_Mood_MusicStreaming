@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import PlaylistsCover from "@/components/PlaylistCover";
-import { Heart, Share2 } from "lucide-react";
+import { Heart, Share2, Pencil } from "lucide-react";
 import AddToPlaylistButton from "@/components/Plus";
 import Smallpic from "@/components/cover_pic/Smallpic";
 import Loading from "@/components/loading/Loading";
