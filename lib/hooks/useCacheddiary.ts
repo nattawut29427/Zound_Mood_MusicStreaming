@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 
 const memoryCache = new Map<string, { url: string; expiresAt: number }>();
 
-export function useCachedSignedUrl(key: string | undefined, shouldLog = false) {
+export function useCachedDiary(key: string | undefined) {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
     console.log("🔑 useCachedSignedUrl triggered with key:", key);
-
+    
     if (!key) {
       console.warn("🚫 No key provided, clearing URL");
       setUrl(null);
@@ -15,7 +15,7 @@ export function useCachedSignedUrl(key: string | undefined, shouldLog = false) {
     }
 
     // 1. Check memory cache
-    const cached = memoryCache.get(key);
+     const cached = memoryCache.get(key);
     if (cached) {
       if (Date.now() < cached.expiresAt) {
         console.log("⚡️ Found valid URL in memoryCache:", cached.url);
@@ -54,21 +54,13 @@ export function useCachedSignedUrl(key: string | undefined, shouldLog = false) {
       console.log("🌐 Fetching new signed URL for:", key);
 
       try {
-        const logParam = shouldLog ? "&log=true" : "";
-        const res = await fetch(
-          `/api/playsong?key=${encodeURIComponent(key)}${logParam}`
-        );
+        const res = await fetch(`/api/playsongDiary?key=${encodeURIComponent(key)}`);
         const data = await res.json();
 
         if (res.ok && data.url) {
           const expiresAt = Date.now() + 1000 * 60 * 5;
 
-          console.log(
-            "✅ Fetched URL:",
-            data.url,
-            "Expires At:",
-            new Date(expiresAt).toISOString()
-          );
+          console.log("✅ Fetched URL:", data.url, "Expires At:", new Date(expiresAt).toISOString());
 
           memoryCache.set(key, data.url);
           localStorage.setItem(
@@ -78,6 +70,7 @@ export function useCachedSignedUrl(key: string | undefined, shouldLog = false) {
 
           setUrl(data.url);
         } else {
+          console.error("❌ Error fetching signed URL from API:", data.error);
         }
       } catch (err) {
         console.error("🌐 Network error while fetching signed URL", err);
