@@ -25,10 +25,12 @@ model User {
   songs      Song[]         @relation("UploadedSongs")
   playlists  Playlist[]
   likesongs  LikeSong[]
+  diary_like DiaryLike[]
   followers  Follow[]       @relation("Followers")
   following  Follow[]       @relation("Following")
   diaries    Diary[]
   feeds      Feed[]
+  listeningHistories ListeningHistory[]
 }
 
 enum Level {
@@ -84,6 +86,8 @@ model Song {
   diary      Diary[]
   feed_items FeedItem[]
   song_tags  SongTag[]
+  listeningHistories ListeningHistory[]
+  stat               SongStat?
 }
 
 model Playlist {
@@ -120,6 +124,18 @@ model LikeSong {
 
   @@unique([user_id, song_id], name: "user_id_song_id")
 }
+
+model DiaryLike {
+  id        Int    @id @default(autoincrement())
+  diary_id  Int
+  user_id   String
+
+  diary     Diary  @relation(fields: [diary_id], references: [id])
+  user      User   @relation(fields: [user_id], references: [id])
+
+  @@unique([diary_id, user_id])
+}
+
 
 model Follow {
   following_user_id String
@@ -173,9 +189,12 @@ model Diary {
   user_id     String
   is_private  Boolean     @default(false)
   created_at  DateTime    @default(now())
+  
   song        Song        @relation(fields: [song_id], references: [id])
   user        User        @relation(fields: [user_id], references: [id])
   diary_feeds DiaryFeed[]
+  stat        DiaryStat?
+  diary_like  DiaryLike[]
 }
 
 model DiaryFeed {
@@ -200,4 +219,32 @@ model SongTag {
   tag     Tag     @relation(fields: [tag_id], references: [id])
 
   @@id([song_id, tag_id])
+}
+
+model ListeningHistory {
+  id         Int      @id @default(autoincrement())
+  user_id    String
+  song_id    Int
+  listened_at DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id])
+  song       Song     @relation(fields: [song_id], references: [id])
+
+  @@index([user_id, song_id])
+}
+
+model SongStat {
+  song_id    Int    @id
+  play_count Int    @default(0)
+  like_count Int    @default(0)
+
+  song       Song   @relation(fields: [song_id], references: [id])
+}
+
+model DiaryStat {
+  diary_id   Int    @id
+  view_count Int    @default(0)
+  like_count Int    @default(0)
+
+  diary      Diary  @relation(fields: [diary_id], references: [id]) 
 }
