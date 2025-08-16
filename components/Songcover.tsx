@@ -2,20 +2,27 @@
 
 import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { Play, Pause, Ellipsis } from "lucide-react";
 
 export default function SongCover({
   picture,
   name,
+  isPlaying,
   onImageChange,
+  onPlayClick,
+  onPauseClick,
 }: {
   picture: string;
   name: string;
+  isPlaying?: boolean;
   onImageChange?: (file: File) => void;
+  onPlayClick?: (e: React.MouseEvent) => void;
+  onPauseClick?: (e: React.MouseEvent) => void;
 }) {
- const rawSignedUrl = useCachedSignedUrl(picture);
-const isBlobUrl = picture.startsWith("blob:");
-const signedUrl = isBlobUrl ? picture : rawSignedUrl;
+  const rawSignedUrl = useCachedSignedUrl(picture);
+  const isBlobUrl = picture?.startsWith("blob:");
+  const signedUrl = isBlobUrl ? picture : rawSignedUrl;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -28,54 +35,96 @@ const signedUrl = isBlobUrl ? picture : rawSignedUrl;
     }
   };
 
-  if (!picture)
-    return (
-      <div className="w-48 h-48 flex items-center justify-center text-gray-400">
-        No image
-      </div>
-    );
+  const togglePlay = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isPlaying) {
+      onPauseClick?.(e);
+    } else {
+      onPlayClick?.(e);
+    }
+  };
+
+  useEffect(() => {
+    if (!picture) return; // ✅ hook ถูกเรียกเสมอ
+    if (picture.startsWith("blob:")) {
+      setLoading(false);
+    } else {
+      setLoading(true);
+      setError(false);
+    }
+  }, [picture]);
 
   return (
     <div className="relative w-48 h-48 group">
-      {/* รูปภาพ */}
-      {signedUrl && !error && (
-        <Image
-          src={signedUrl}
-          alt={name}
-          fill
-          className={`object-cover rounded-md transition-opacity duration-300 ${
-            loading ? "opacity-0" : "opacity-100"
-          }`}
-          onLoadingComplete={() => setLoading(false)}
-          onError={() => {
-            setLoading(false);
-            setError(true);
-          }}
-          style={{ zIndex: 10, pointerEvents: "none" }}
-        />
-      )}
-
-      {/* พื้นหลังมืด (เฉพาะตอน hover) */}
-      <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-60 transition z-20 pointer-events-none duration-300" />
-
-      {/* ปุ่ม Upload */}
-      {onImageChange && (
+      {!picture ? (
+        <div className="w-48 h-48 flex items-center justify-center text-gray-400">
+          No image
+        </div>
+      ) : (
         <>
-          <div className="absolute inset-0 flex items-center justify-center z-40 opacity-0 group-hover:opacity-100 transition">
+          {/* รูปภาพ */}
+          {signedUrl && !error && (
+            <Image
+              src={signedUrl}
+              alt={name}
+              fill
+              className={`object-cover rounded-md transition-opacity duration-300 ${
+                loading ? "opacity-0" : "opacity-100"
+              }`}
+              onLoadingComplete={() => setLoading(false)}
+              onError={() => {
+                setLoading(false);
+                setError(true);
+              }}
+              style={{ zIndex: 10, pointerEvents: "none" }}
+            />
+          )}
+
+          {/* ปุ่ม Play/Pause */}
+          <div className="absolute bottom-2 right-2 z-30 opacity-0 group-hover:opacity-100 transition">
             <button
-              onClick={() => fileInputRef.current?.click()}
-              className="bg-white text-black px-3 py-1 rounded-full hover:bg-gray-300 cursor-pointer transition"
+              className="bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition cursor-pointer"
+              onClick={togglePlay}
             >
-              Upload new image
+              {isPlaying ? (
+                <Pause className="w-5 h-5" />
+              ) : (
+                <Play className="w-5 h-5" />
+              )}
             </button>
           </div>
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            className="hidden"
-            onChange={handleFileChange}
-          />
+
+          {/* ปุ่ม ... */}
+          <div className="absolute top-1 right-2 z-30 opacity-0 group-hover:opacity-100 transition">
+            <button className="text-white p-2 rounded-full hover:bg-opacity-80 transition cursor-pointer hover:bg-black/55">
+              <Ellipsis className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* พื้นหลังมืดตอน hover */}
+          <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-60 transition z-20 pointer-events-none duration-300" />
+
+          {/* ปุ่ม Upload รูป */}
+          {onImageChange && (
+            <>
+              <div className="absolute inset-0 flex items-center justify-center z-40 opacity-0 group-hover:opacity-100 transition">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-white text-black px-3 py-1 rounded-full hover:bg-gray-300 cursor-pointer transition"
+                >
+                  Upload new image
+                </button>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </>
+          )}
         </>
       )}
     </div>

@@ -2,9 +2,8 @@
 
 import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 import Image from "next/image";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Play, Pause, Ellipsis } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SongCover({
   picture,
@@ -36,15 +35,6 @@ export default function SongCover({
     }
   };
 
-  useEffect(() => {
-    if (picture.startsWith("blob:")) {
-      setLoading(false);
-    } else {
-      setLoading(true);
-      setError(false);
-    }
-  }, [picture]);
-
   const togglePlay = (e: React.MouseEvent) => {
     e.preventDefault(); // ป้องกันไม่ให้ <Link> ทำงาน
     e.stopPropagation(); // กัน event bubble
@@ -63,13 +53,8 @@ export default function SongCover({
     );
 
   return (
-    <div className="relative w-20 h-20 group">
+    <div className="relative w-16 h-16 group">
       {/* รูปภาพ */}
-
-      {loading && !error && (
-        <Skeleton className="absolute inset-0 w-full h-full rounded-md" />
-      )}
-     
       {signedUrl && !error && (
         <Image
           src={signedUrl}
@@ -88,7 +73,7 @@ export default function SongCover({
       )}
 
       {/* ปุ่ม Play/Pause */}
-      <div className="absolute top-6 left-6  z-30 opacity-0 group-hover:opacity-100 transition">
+      <div className="absolute top-4 left-4  z-30 opacity-0 group-hover:opacity-100 transition">
         <button
           className="bg-black/50 bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition cursor-pointer"
           onClick={togglePlay}

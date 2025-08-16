@@ -1,9 +1,11 @@
-// lib/uploadImage.ts
-
 export async function uploadImageToR2(file: File): Promise<string> {
   try {
-    const pictureKey = `cover/${Date.now()}_${file.name}`;
+    // ป้องกันชื่อไฟล์ซ้ำหรือมีอักขระแปลก ๆ
+    const extension = file.name.split('.').pop();
+    const safeName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`;
+    const pictureKey = `pictures/${safeName}`;
 
+    // ✅ ขอ signed PUT URL จาก API /api/upload
     const signedUrlRes = await fetch(
       `/api/upload?key=${encodeURIComponent(pictureKey)}&contentType=${encodeURIComponent(file.type)}`
     );
@@ -14,6 +16,7 @@ export async function uploadImageToR2(file: File): Promise<string> {
 
     const { url: uploadUrl } = await signedUrlRes.json();
 
+    // ✅ ส่งไฟล์เข้า R2
     const uploadRes = await fetch(uploadUrl, {
       method: "PUT",
       headers: { "Content-Type": file.type },
@@ -21,6 +24,8 @@ export async function uploadImageToR2(file: File): Promise<string> {
     });
 
     if (!uploadRes.ok) {
+      const errorText = await uploadRes.text();
+      console.error("❌ Failed PUT:", errorText);
       throw new Error("อัปโหลดไฟล์ไม่สำเร็จ");
     }
 

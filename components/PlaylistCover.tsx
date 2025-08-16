@@ -1,7 +1,8 @@
 "use client";
 
-import { useSignedImage } from "@/lib/hooks/useSignedImage";
+ import { useSignedImage } from "@/lib/hooks/useSignedImage";
 import Image from "next/image";
+import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 
 export default function SongCover({
   picture,
@@ -10,7 +11,7 @@ export default function SongCover({
   picture: string;
   name: string;
 }) {
-  const signedUrl = useSignedImage(picture);
+  const signedUrl = useCachedSignedUrl(picture);
 
   return (
     <>
