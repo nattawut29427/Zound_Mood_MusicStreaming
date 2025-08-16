@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { generateUserSlug } from "@/lib/slug";
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -14,7 +15,7 @@ export default function Header() {
     <header className="bg-black p-6 h-16 w-full sticky top-0 z-10 mb-4 flex items-center justify-between">
       <div className="text-white font-bold text-2xl">
         <Link href="/">
-        <AuroraText>Zound mooz</AuroraText>
+          <AuroraText>Zound mooz</AuroraText>
         </Link>
       </div>
 
@@ -56,14 +57,19 @@ export default function Header() {
         </Button>
 
         {status === "authenticated" && session ? (
-          <Link href="/you">
-          <Image
-          src={session.user?.image || "/2.jpg"}
-          alt="avatar"
-          width={30}
-          height={30}
-          className="rounded-full cursor-pointer hover:opacity-80 transition-opacity duration-300"
-          />
+          <Link
+            href={`/see/${generateUserSlug({
+              id: session.user.id,
+              username: session.user.username ?? "unknown",
+            })}`}
+          >
+            <Image
+              src={session.user?.image || "/2.jpg"}
+              alt="avatar"
+              width={30}
+              height={30}
+              className="rounded-full cursor-pointer hover:opacity-80 transition-opacity duration-300"
+            />
           </Link>
         ) : (
           <div>No avatar</div>

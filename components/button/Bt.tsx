@@ -8,7 +8,10 @@ type FollowUserWrapperProps = {
   userIdToFollow: string;
 };
 
-export default function FollowUserWrapper({ initialIsFollowing, userIdToFollow }: FollowUserWrapperProps) {
+export default function FollowUserWrapper({
+  initialIsFollowing,
+  userIdToFollow,
+}: FollowUserWrapperProps) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
 
@@ -35,11 +38,11 @@ export default function FollowUserWrapper({ initialIsFollowing, userIdToFollow }
   }
 
   return (
-    
     <FollowBt
       isFollowing={isFollowing}
       onClick={handleToggleFollow}
       disabled={loading}
+      userIdToFollow={userIdToFollow}
     />
   );
 }

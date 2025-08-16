@@ -6,21 +6,23 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = await params; // ไม่ต้อง await params
+  const { id } = await context.params;
+
   if (!id) {
     return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
   }
 
+  // เช็คว่า user login ไหม (ถ้าอยากเปิดให้ทุกคนเข้าดูก็ลบไ
   const session = await getServerSession(authOptions);
-
-  if (!session || !session.user?.id) {
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // ดึง user ตาม params.id (ไม่ใช่ session.user.id)
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id },
     include: {
       songs: {
         include: {
@@ -73,6 +75,7 @@ export async function GET(
       },
     },
   });
+
 
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });

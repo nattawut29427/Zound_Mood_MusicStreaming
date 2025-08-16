@@ -41,13 +41,22 @@ type UserData = {
   listeningHistories?: any[];
 };
 
-export default function Navigator() {
+interface NavigatorProps {
+  userId: string;
+}
+
+export default function Navigator({ userId }: NavigatorProps) {
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<TabName>("Popular");
   const [userData, setUserData] = useState<UserData | null>(null);
   const { playSong, stop, isPlaying, playQueue } = usePlayer();
+  const isOwner = session?.user?.id === userId;
 
-  const userId = session?.user?.id;
+  // สร้าง tabs เฉพาะที่ควรโชว์
+  const availableTabs: TabName[] = ["Popular", "Track"];
+  if (isOwner) {
+    availableTabs.push("Playlist", "Like");
+  }
 
   useEffect(() => {
     if (!userId) return;
@@ -66,18 +75,9 @@ export default function Navigator() {
     fetchUserData();
   }, [userId]);
 
-  if (status === "loading") {
-    return <div className="text-white">Loading session...</div>;
-  }
-
-  if (!userId) {
-    return <div className="text-white">Unauthorized</div>;
-  }
-
   if (!userData) {
     return <div className="text-white">Loading user data...</div>;
   }
-
   const tabs: Record<TabName, any[]> = {
     Popular: userData.songs || [],
     Track: userData.songs || [],
@@ -89,7 +89,7 @@ export default function Navigator() {
     <div>
       {/* Tabs */}
       <div className="flex gap-4 text-xl px-8 mb-10 mt-24 font-semibold">
-        {(Object.keys(tabs) as TabName[]).map((tab) => (
+        {availableTabs.map((tab) => (
           <span
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -147,67 +147,69 @@ export default function Navigator() {
         {/* Playlist */}
         {activeTab === "Playlist" &&
           tabs.Playlist.map((playlist: Playlist) => (
-             <Link
+            <Link
               key={playlist.id}
               href={`/you/playlists/${playlist.id}`}
               className="block rounded-lg hover:opacity-80 transition"
             >
-            <div
-              key={playlist.id}
-              className="flex items-center cursor-pointer hover:bg-indigo-800 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
-            >
-              <Mdpic
-                picture={playlist.pic_playlists}
-                name={playlist.name_playlist}
-                onPlayClick={() => {
-                  const songs = playlist.playlist_songs.map((ps) => ps.song);
-                  if (songs.length > 0) {
-                    playQueue(songs, 0);
-                  }
-                }}
-                onPauseClick={() => stop()}
-              />
-              <div className="flex flex-col ml-4">
-                <span className="font-bold ml-2">{playlist.user?.name}</span>
-                <span className="font-medium ml-2">
-                  {playlist.name_playlist}
-                </span>
+              <div
+                key={playlist.id}
+                className="flex items-center cursor-pointer hover:bg-indigo-800 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
+              >
+                <Mdpic
+                  picture={playlist.pic_playlists}
+                  name={playlist.name_playlist}
+                  onPlayClick={() => {
+                    const songs = playlist.playlist_songs.map((ps) => ps.song);
+                    if (songs.length > 0) {
+                      playQueue(songs, 0);
+                    }
+                  }}
+                  onPauseClick={() => stop()}
+                />
+                <div className="flex flex-col ml-4">
+                  <span className="font-bold ml-2">{playlist.user?.name}</span>
+                  <span className="font-medium ml-2">
+                    {playlist.name_playlist}
+                  </span>
+                </div>
+                <div className="text-gray-400 ml-auto">≡</div>
               </div>
-              <div className="text-gray-400 ml-auto">≡</div>
-            </div>
             </Link>
           ))}
 
         {/* Like */}
         {activeTab === "Like" &&
           tabs.Like.map((like: LikeSong) => (
-             <Link
+            <Link
               key={like.id}
               href={`/viewsongs/${like.song_id}`}
               className="block rounded-lg hover:opacity-80 transition"
             >
-            <div
-              key={like.id}
-              className="flex items-center cursor-pointer hover:bg-indigo-800 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
-            >
-              <Mdpic
-                picture={like.song.picture || "/fallback.jpg"}
-                name={like.song.name_song}
-                onPlayClick={() => {
-                  if (like.song.audio_url) {
-                    playSong(like.song);
-                  }
-                }}
-                onPauseClick={() => stop()}
-              />
-              <div className="flex flex-col ml-4">
-                <span className="font-bold ml-2">
-                  {like.song.uploader?.name || "Unknown Artist"}
-                </span>
-                <span className="font-medium ml-2">{like.song.name_song}</span>
+              <div
+                key={like.id}
+                className="flex items-center cursor-pointer hover:bg-indigo-800 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
+              >
+                <Mdpic
+                  picture={like.song.picture || "/fallback.jpg"}
+                  name={like.song.name_song}
+                  onPlayClick={() => {
+                    if (like.song.audio_url) {
+                      playSong(like.song);
+                    }
+                  }}
+                  onPauseClick={() => stop()}
+                />
+                <div className="flex flex-col ml-4">
+                  <span className="font-bold ml-2">
+                    {like.song.uploader?.name || "Unknown Artist"}
+                  </span>
+                  <span className="font-medium ml-2">
+                    {like.song.name_song}
+                  </span>
+                </div>
+                <div className="text-gray-400 ml-auto">≡</div>
               </div>
-              <div className="text-gray-400 ml-auto">≡</div>
-            </div>
             </Link>
           ))}
       </div>
