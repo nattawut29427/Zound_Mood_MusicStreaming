@@ -6,11 +6,10 @@ import SongCover from "./Songcover";
 import { Allplaylist } from "@/components/Allplaylist";
 import { uploadImageToR2 } from "@/lib/uploadImage";
 import { SimpleEditor } from "./tiptap-templates/simple/simple-editor";
-
-
+import Card from "@/components/RecentCard/Card";
 
 export default function Sidebar2() {
-  const { view, selectedSong, setView } = useSidebar();
+  const { view, selectedSong, setView, selectedPlaylist } = useSidebar();
   const [playlistName, setPlaylistName] = useState("");
   const [existingPlaylistId, setExistingPlaylistId] = useState<string | null>(
     null
@@ -22,6 +21,21 @@ export default function Sidebar2() {
   const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
+
+  // edit playlist
+  const [editName, setEditName] = useState("");
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editPreviewUrl, setEditPreviewUrl] = useState<string>("");
+  const [editError, setEditError] = useState("");
+
+  useEffect(() => {
+    if (view === "editPlaylist" && selectedPlaylist) {
+      setEditName(selectedPlaylist.name_playlist);
+      setEditPreviewUrl(selectedPlaylist.picture);
+      setEditImageFile(null);
+      setEditError("");
+    }
+  }, [view, selectedPlaylist]);
 
   //  เมื่อ selectedSong เปลี่ยน ให้ใช้รูปของเพลงเป็น default
   useEffect(() => {
@@ -109,6 +123,7 @@ export default function Sidebar2() {
     }
   };
 
+ 
   if (view === "createPlaylist") {
     return (
       <div className="w-80 p-4 space-y-4 bg-gradient-to-t from-black to-[#252525] duration-200 h-full flex flex-col">
@@ -141,14 +156,14 @@ export default function Sidebar2() {
             disabled={!existingPlaylistId}
             className="w-full py-2 rounded-lg bg-white text-black font-semibold disabled:opacity-40"
           >
-            ✅ Add to Playlist
+            Add to Playlist
           </button>
 
           <button
             onClick={() => setView("createNewPlaylist")}
             className="w-full py-2 rounded-full bg-neutral-800 text-white border border-white"
           >
-             Create New Playlist
+            Create New Playlist
           </button>
 
           <button
@@ -198,14 +213,119 @@ export default function Sidebar2() {
             onClick={handleCreate}
             className="w-full py-2 rounded-lg bg-white text-black font-semibold"
           >
-            ✅ Create Playlist
+            Create Playlist
           </button>
 
           <button
             onClick={() => setView("createPlaylist")}
             className="w-full py-2 rounded-lg bg-zinc-700 text-white"
           >
-            🔙 Back to Playlist
+            Back to Playlist
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "editPlaylist" && selectedPlaylist) {
+    const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const preview = URL.createObjectURL(file);
+        setEditPreviewUrl(preview);
+        setEditImageFile(file);
+      }
+    };
+
+    const handleSaveEdit = async () => {
+      setEditError("");
+
+      let finalPictureUrl = editPreviewUrl;
+
+      if (!editName) {
+        setEditError("กรุณาใส่ชื่อ Playlist");
+        return;
+      }
+
+      if (editImageFile) {
+        try {
+          finalPictureUrl = await uploadImageToR2(editImageFile);
+        } catch (err: any) {
+          setEditError("อัปโหลดรูปไม่สำเร็จ: " + err.message);
+          return;
+        }
+      }
+
+      try {
+        const res = await fetch(`/api/playlist`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            playlistId: selectedPlaylist.id,
+            name_playlist: editName,
+            picture: finalPictureUrl,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok)
+          throw new Error(data.error || "ไม่สามารถแก้ไข Playlist ได้");
+
+        alert("แก้ไข Playlist สำเร็จ");
+        console.log(data)
+        setView(null);
+      } catch (err: any) {
+        setEditError(err.message);
+      }
+    };
+
+    return (
+      <div className="w-80 p-4 space-y-4 bg-gradient-to-t from-black to-[#252525] duration-200 h-full flex flex-col">
+        <h2 className="text-xl font-bold pb-2">Edit Playlist</h2>
+
+        <div className="flex flex-col items-center justify-center my-2 space-y-2">
+          <div className="space-y-4 w-48 h-fit rounded-lg">
+            <SongCover
+              picture={editPreviewUrl}
+              name="editPreview"
+              onImageChange={(file) => {
+                const preview = URL.createObjectURL(file);
+                setEditPreviewUrl(preview);
+                setEditImageFile(file);
+              }}
+            />
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleEditFileChange}
+          />
+        </div>
+
+        <input
+          className="w-full p-2 rounded bg-neutral-700"
+          placeholder="Playlist name"
+          value={editName}
+          onChange={(e) => setEditName(e.target.value)}
+        />
+
+        {editError && <p className="text-red-400 text-sm">{editError}</p>}
+
+        <div className="flex flex-col gap-3 mt-4">
+          <button
+            onClick={handleSaveEdit}
+            className="w-full py-2 rounded-lg bg-white text-black font-semibold"
+          >
+            Save Changes
+          </button>
+
+          <button
+            onClick={() => setView(null)}
+            className="w-full py-2 rounded-lg bg-zinc-700 text-white"
+          >
+            Cancel
           </button>
         </div>
       </div>
@@ -222,8 +342,19 @@ export default function Sidebar2() {
 
   return (
     <aside className="w-78 p-4 bg-gradient-to-t from-black from-[10%] to-[#252525] shadow-xl flex flex-col justify-between">
-      <div>
-        <h1 className="text-white font-bold text-3xl">TOPIC</h1>
+      <div className="h-screen w-full">
+        <h1 className="text-white font-bold text-3xl">Recent</h1>
+        <div className="flex flex-col">
+          <div className="h-72 w-full mt-5 overflow-auto">
+            <Card />
+          </div>
+          <div className="text-3xl mt-5 font-bold">
+            For you
+            <div>
+              <p>เเนะนำเเนวเพลงที่ฟังบ่อย</p>
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   );

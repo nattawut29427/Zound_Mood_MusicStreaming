@@ -2,9 +2,10 @@
 "use client";
 
 import React from "react";
-import { Heart,  Shuffle, CirclePlay, PauseCircle} from "lucide-react"; // เพิ่ม PauseCircle
+import { Heart, Shuffle, CirclePlay, PauseCircle, Pencil } from "lucide-react"; // เพิ่ม PauseCircle
 import { usePlayer } from "@/app/context/Playercontext";
 import { Song } from "@/components/types";
+import { useSidebar } from "@/app/context/SidebarContext";
 
 interface PlaylistDetailControlsProps {
   playlistId: number;
@@ -15,10 +16,16 @@ interface PlaylistDetailControlsProps {
 }
 
 export default function PlaylistDetailControls({
+  playlistId,
+  playlistName,
+  playlistPicture,
+  creatorName,
   songs,
 }: PlaylistDetailControlsProps) {
   const { currentTrack, isPlaying, playQueue, pause, queue, resume } =
     usePlayer();
+
+  const { setView } = useSidebar();
 
   const isThisPlaylistLoadedInQueue =
     songs.length > 0 && // ตรวจสอบว่า Playlist ที่แสดงมีเพลง
@@ -73,11 +80,7 @@ export default function PlaylistDetailControls({
     text-white
     transition-colors
     
-    ${
-      songs.length === 0
-        ? " cursor-not-allowed"
-        : ""
-    }
+    ${songs.length === 0 ? " cursor-not-allowed" : ""}
   `}
         aria-label={
           isThisPlaylistLoadedInQueue && isPlaying
@@ -87,9 +90,9 @@ export default function PlaylistDetailControls({
         disabled={songs.length === 0}
       >
         {isThisPlaylistLoadedInQueue && isPlaying ? (
-          <PauseCircle className="w-12 h-12  text-blue-500 cursor-pointer transition-transform duration-200 scale-110"  />
+          <PauseCircle className="w-12 h-12  text-blue-500 cursor-pointer transition-transform duration-200 scale-110" />
         ) : (
-          <CirclePlay  className="w-12 h-12 text-blue-500 cursor-pointer transition-transform duration-200 scale-110"/>
+          <CirclePlay className="w-12 h-12 text-blue-500 cursor-pointer transition-transform duration-200 scale-110" />
         )}
       </button>
 
@@ -105,10 +108,19 @@ export default function PlaylistDetailControls({
 
       {/* ปุ่ม Like/Heart (ตัวอย่าง) */}
       <button
-        className="flex items-center justify-center p-3 rounded-full bg-neutral-700 text-white hover:bg-red-500 transition-colors"
+        className="flex items-center justify-center p-3 rounded-full bg-neutral-700 text-white hover:bg-red-500 transition-colors cursor-pointer"
         aria-label="Like playlist"
       >
-        <Heart className="w-6 h-6" />
+        <Pencil
+          className="w-6 h-6"
+          onClick={() =>
+            setView("editPlaylist", undefined, {
+              id: playlistId,
+              name_playlist: playlistName,
+              picture: playlistPicture,
+            })
+          }
+        />
       </button>
     </div>
   );

@@ -9,7 +9,10 @@ import {
 } from "react";
 import { Howl } from "howler";
 import { Song } from "@/components/types";
+import { Diary } from "@/components/types";
 import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
+import { useCachedDiary } from "@/lib/hooks/useCacheddiary";
+import { usePathname } from "next/navigation";
 
 type PlayerContextType = {
   currentTrack: Song | null;
@@ -24,12 +27,14 @@ type PlayerContextType = {
   playPrevious: () => void;
   playSong: (song: Song, queue?: Song[]) => void;
   pause: () => void;
+  stop: () => void;
   resume: () => void;
   seek: (pos: number) => void;
   setVolume: (vol: number) => void;
   toggleLoop: () => void;
   setQueue: (songs: Song[]) => void;
   playQueue: (songs: Song[], startIndex: number) => void;
+  playDiary: (diary: Diary) => void;
 };
 
 export const PlayerContext = createContext<PlayerContextType>(
@@ -45,11 +50,20 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [duration, setDuration] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
 
+  const pathname = usePathname();
+
   const [queue, setQueue] = useState<Song[]>([]);
   const [queueIndex, setQueueIndex] = useState<number>(0);
+  const [currentDiaryAudioUrl, setCurrentDiaryAudioUrl] = useState<
+    string | null
+  >(null);
 
-  // ใช้ useCachedSignedUrl เพื่อแคช signed url
-  const signedUrl = useCachedSignedUrl(currentTrack?.audio_url);
+  const shouldLog = !!currentTrack; // หรือ logic ที่แม่นยำกว่านี้ตามต้องการ
+
+  const signedUrl = useCachedSignedUrl(currentTrack?.audio_url, shouldLog);
+  const signedUrlDiary = useCachedDiary(currentDiaryAudioUrl ?? undefined);
+
+  const playingUrl = currentDiaryAudioUrl ? signedUrlDiary : signedUrl;
 
   const playQueue = (songs: Song[], startIndex: number) => {
     if (songs.length === 0) return;
@@ -57,6 +71,38 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     setQueue(songs);
     setQueueIndex(startIndex);
     setCurrentTrack(songs[startIndex]);
+  };
+
+  const playDiary = (diary: Diary) => {
+    if (!diary.song) return;
+
+    const isFromDiaryPage = pathname.startsWith("/you/diary");
+
+    const audioUrl = isFromDiaryPage
+      ? diary.trimmed_audio_url || diary.song.audio_url
+      : diary.song.audio_url;
+
+    const song: Song = {
+      id: diary.song.id,
+      name_song: diary.song.name_song,
+      audio_url: audioUrl,
+      picture: diary.song.picture,
+      uploaded_by: diary.song.uploaded_by,
+    };
+
+    if (currentTrack?.id === song.id) {
+      sound?.stop();
+      setCurrentTrack(null);
+      setCurrentDiaryAudioUrl(null);
+      setTimeout(() => {
+        setCurrentTrack(song);
+        setCurrentDiaryAudioUrl(audioUrl);
+      }, 0);
+      return;
+    }
+
+    setCurrentTrack(song);
+    setCurrentDiaryAudioUrl(audioUrl);
   };
 
   useEffect(() => {
@@ -93,7 +139,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
   // เล่นเพลงเมื่อ signedUrl เปลี่ยน (ได้ URL ที่แคชแล้ว)
   useEffect(() => {
-    if (!signedUrl || !currentTrack) return;
+    if (!playingUrl || !currentTrack) return;
 
     if (sound) {
       sound.stop();
@@ -101,10 +147,9 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const newSound = new Howl({
-      src: [signedUrl],
+      src: [playingUrl],
       html5: true,
       volume,
-
       onplay: () => {
         setIsPlaying(true);
         setDuration(newSound.duration());
@@ -123,15 +168,31 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       newSound.unload();
     };
-  }, [signedUrl, currentTrack?.id]);
+  }, [playingUrl, currentTrack?.id]);
 
   const playSong = (song: Song) => {
+    setCurrentDiaryAudioUrl(null);
     setCurrentTrack(song);
+
+    if (currentTrack?.id === song.id) {
+      sound?.stop();
+      setCurrentTrack(null);
+      setTimeout(() => setCurrentTrack(song), 0);
+    } else {
+      setCurrentTrack(song);
+    }
   };
 
   const pause = () => {
     if (sound) {
       sound.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const stop = () => {
+    if (sound) {
+      sound.stop();
       setIsPlaying(false);
     }
   };
@@ -203,8 +264,10 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         duration,
         isLooping,
         playSong,
+        playDiary,
         queue,
         queueIndex,
+        stop,
         pause,
         resume,
         seek,

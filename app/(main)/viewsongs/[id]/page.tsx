@@ -7,36 +7,64 @@ import SongDetailControls from "@/components/SongdetailControl";
 import Likebutton from "@/components/Likebutton";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import FollowUserWrapper from "@/components/button/Bt";
 
 export default async function SongDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const resolvedParams = await params;
+  const songId = Number(params.id);
+  
 
-    const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return <div className="text-white">Unauthorized</div>;
   }
 
+  
   const likedRecord = await prisma.likeSong.findUnique({
     where: {
       user_id_song_id: {
         user_id: session.user.id,
-        song_id: session.user.id ? Number(resolvedParams.id) : 0, 
+        song_id: songId,
       },
     },
   });
-
+  const songStat = await prisma.songStat.findUnique({
+    where: {
+      song_id: songId,
+    },
+    select: {
+      like_count: true,
+      play_count: true,
+    },
+  });
+  
   const isLiked = !!likedRecord;
-
+  
   const song = await prisma.song.findUnique({
-    where: { id: Number(resolvedParams.id) }, // ใช้ resolvedParams.id
+    where: { id: songId },
     include: { uploader: true },
   });
 
   if (!song) return <div>Song not found</div>;
+
+    
+  const followerCount = await prisma.follow.count({
+    where: {
+      followed_user_id: song.uploader?.id, // นับว่ามีคนติดตาม uploader คนนี้กี่คน
+    },
+  });
+
+  const isFollowing = await prisma.follow.findUnique({
+  where: {
+    following_user_id_followed_user_id: {
+      following_user_id: session.user.id,
+      followed_user_id: song.uploader.id,
+    },
+  },
+});
 
   return (
     <div className="bg-neutral-900 min-h-screen text-white">
@@ -62,7 +90,7 @@ export default async function SongDetailPage({
             </div>
             <div className="text-sm px-4 py-1 rounded-full">
               <div className="flex space-x-6">
-                <Likebutton songId={song.id} initialLiked={isLiked}/>
+                <Likebutton songId={song.id} initialLiked={isLiked} />
                 <AddToPlaylistButton
                   songId={song.id}
                   picture={song.picture ?? ""}
@@ -82,16 +110,17 @@ export default async function SongDetailPage({
             <Image
               src={song.uploader?.image || "/default-avatar.png"}
               alt={song.uploader?.name || "avatar"}
-              fill // ใช้ fill ให้เต็ม container
-              style={{ objectFit: "cover" }} // ให้ภาพครอบคลุมพื้นที่
-              sizes="96px" // หรือกำหนดขนาดเหมาะสม
+              fill
+              style={{ objectFit: "cover" }}
+              sizes="96px"
             />
           </div>
-
           <p className="text-gray-300">{song.uploader?.name}</p>
-          <button className="bg-white text-black px-4 py-1 rounded-full">
-            Follow
-          </button>
+          <p>{followerCount} followers</p>
+          <FollowUserWrapper
+            initialIsFollowing={!!isFollowing}
+            userIdToFollow={song.uploader?.id}
+          />
         </div>
 
         {/* ด้านขวา: คำอธิบาย */}
@@ -99,7 +128,10 @@ export default async function SongDetailPage({
           <h2 className="text-xl font-bold mb-2">Description</h2>
           {/* <p>{song.description || "No description provided."}</p> */}
         </div>
-        <div className="w-64 bg-black "></div>
+        <div className="w-64 bg-black ">
+          <p>{songStat?.like_count}</p>
+          <p>{songStat?.play_count}</p>
+        </div>
       </div>
     </div>
   );

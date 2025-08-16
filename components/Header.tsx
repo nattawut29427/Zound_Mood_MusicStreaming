@@ -56,13 +56,15 @@ export default function Header() {
         </Button>
 
         {status === "authenticated" && session ? (
+          <Link href="/you">
           <Image
-            src={session.user?.image || ""}
-            alt="avatar"
-            width={30}
-            height={30}
-            className="rounded-full cursor-pointer hover:opacity-80 transition-opacity duration-300"
+          src={session.user?.image || "/2.jpg"}
+          alt="avatar"
+          width={30}
+          height={30}
+          className="rounded-full cursor-pointer hover:opacity-80 transition-opacity duration-300"
           />
+          </Link>
         ) : (
           <div>No avatar</div>
         )}

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Mdpic from "@/components/cover_pic/Mdpic";
+import Mdpicpl from "@/components/cover_pic/Mdpicpl";
 
 interface AllplaylistProps {
   onSelectPlaylist?: (id: string) => void;
@@ -83,8 +83,9 @@ export function Allplaylist({ onSelectPlaylist, selectedPlaylistId }: Allplaylis
               onClick={() => onSelectPlaylist?.(playlist.id)}
             >
               <div className="overflow-hidden rounded-md ">
-                <Mdpic
+                <Mdpicpl
                   picture={playlist.pic_playlists}
+                  name=""
                   
                 />
               </div>

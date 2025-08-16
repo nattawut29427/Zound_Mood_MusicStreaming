@@ -2,7 +2,8 @@
 
 export interface Uploader {
   id: string;              
-  name: string | null;     
+  name: string | null;
+  image: string | null;     
 
 }
 

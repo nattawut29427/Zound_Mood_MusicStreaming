@@ -145,6 +145,21 @@
   
 }
 
+.clamp-content {
+  display: -webkit-box;        /* Enables flexbox-like multi-line truncation */
+  -webkit-box-orient: vertical; /* Required for vertical orientation */
+  -webkit-line-clamp: 4;       /* Limits to 4 lines */
+  overflow: hidden;            /* Hides overflowing text */
+  
+  /* For Firefox and others that don’t support -webkit-line-clamp */
+  display: box;
+  box-orient: vertical;
+  
+  /* fallback for text overflow */
+  text-overflow: ellipsis;
+}
+
+
 .ProseMirror img {
   max-width: 400px;   /* ขนาดกว้างสูงสุดที่ต้องการ */
   max-height: 300px;  /* ขนาดสูงสุด */
