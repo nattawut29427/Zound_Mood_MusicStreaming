@@ -22,8 +22,8 @@ export default function SongCover({
               src={signedUrl}
               alt={name}
               width={235}
-              height={115}
-              className="aspect-[4/4] h-44 w-fit object-cover hover:scale-110 transition-transform duration-300"
+              height={235}
+              className="aspect-[4/4] h-52  w-fit object-cover hover:scale-110 transition-transform duration-300"
             />
           </div>
         </div>
@@ -34,7 +34,7 @@ export default function SongCover({
             alt="default cover"
             className="aspect-[4/4] h-44 w-fit object-cover hover:scale-110 transition-transform duration-300"
             width={235}
-            height={115}
+            height={235}
           />
         </div>
       )}

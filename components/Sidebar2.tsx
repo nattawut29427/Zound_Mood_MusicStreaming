@@ -7,6 +7,7 @@ import { Allplaylist } from "@/components/Allplaylist";
 import { uploadImageToR2 } from "@/lib/uploadImage";
 import { SimpleEditor } from "./tiptap-templates/simple/simple-editor";
 import Card from "@/components/RecentCard/Card";
+import Createplaylist from "./cover_pic/Createplaylist";
 
 export default function Sidebar2() {
   const { view, selectedSong, setView, selectedPlaylist } = useSidebar();
@@ -184,7 +185,7 @@ export default function Sidebar2() {
 
         <div className="flex flex-col items-center justify-center my-2 space-y-2">
           <div className="space-y-4 w-48 h-fit rounded-lg">
-            <SongCover
+            <Createplaylist
               picture={previewUrl}
               name="preview"
               onImageChange={handleImageUpload}

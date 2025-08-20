@@ -4,24 +4,16 @@ import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import { Play, Pause, Ellipsis } from "lucide-react";
-import Dropbt from "@/components/button/Dropbt";
 
 export default function SongCover({
   picture,
   name,
-  songId,
-  isPlaying,
   onImageChange,
-  onPlayClick,
-  onPauseClick,
 }: {
   picture: string;
   name: string;
-  isPlaying?: boolean;
-  songId: number;
+
   onImageChange?: (file: File) => void;
-  onPlayClick?: (e: React.MouseEvent) => void;
-  onPauseClick?: (e: React.MouseEvent) => void;
 }) {
   const rawSignedUrl = useCachedSignedUrl(picture);
   const isBlobUrl = picture?.startsWith("blob:");
@@ -38,17 +30,7 @@ export default function SongCover({
     }
   };
 
-  const togglePlay = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isPlaying) {
-      onPauseClick?.(e);
-    } else {
-      onPlayClick?.(e);
-    }
-  };
-
-  useEffect(() => {
+    useEffect(() => {
     if (!picture) return; // ✅ hook ถูกเรียกเสมอ
     if (picture.startsWith("blob:")) {
       setLoading(false);
@@ -57,8 +39,6 @@ export default function SongCover({
       setError(false);
     }
   }, [picture]);
-
-  console.log("SongCover received songId:", songId)
 
   return (
     <div className="relative w-48 h-48 group">
@@ -86,7 +66,7 @@ export default function SongCover({
             />
           )}
 
-          {/* ปุ่ม Play/Pause */}
+          {/* ปุ่ม Play/Pause
           <div className="absolute bottom-2 right-2 z-30 opacity-0 group-hover:opacity-100 transition">
             <button
               className="bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition cursor-pointer"
@@ -98,13 +78,14 @@ export default function SongCover({
                 <Play className="w-5 h-5" />
               )}
             </button>
-          </div>
+          </div> */}
 
-          {/* ปุ่ม ... */}
+          {/* ปุ่ม ...
           <div className="absolute top-1 right-2 z-30 opacity-0 group-hover:opacity-100 transition">
-            <Dropbt songId={songId} picture={picture} />
-            
-          </div>
+            <button className="text-white p-2 rounded-full hover:bg-opacity-80 transition cursor-pointer hover:bg-black/55">
+              <Ellipsis className="w-5 h-5" />
+            </button>
+          </div> */}
 
           {/* พื้นหลังมืดตอน hover */}
           <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-60 transition z-20 pointer-events-none duration-300" />

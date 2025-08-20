@@ -17,7 +17,7 @@ export async function GET() {
     include: {
       playlist_songs: {
         include: {
-          song: true,
+          song: true, // รวมข้อมูลเพลงใน playlist
         },
       },
     },
@@ -138,5 +138,44 @@ export async function PATCH(req: Request) {
   } catch (error) {
     console.error("Failed to update playlist:", error);
     return NextResponse.json({ error: "Failed to update playlist" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+    const session = await getServerSession(authOptions);
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { playlistId, songId } = await req.json();
+
+  if (!playlistId || !songId) {
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  }
+
+  try {
+    const playlist = await prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        user_id: session.user.id,
+      },
+    });
+
+    if (!playlist) {
+      return NextResponse.json({ error: 'Playlist not found or you do not have permission to modify it.' }, { status: 404 });
+    }
+
+    await prisma.playlistSong.deleteMany({
+      where: {
+        playlist_id: playlistId,
+        song_id: songId,
+      },
+    });
+
+    return NextResponse.json({ message: 'Song removed from playlist successfully.' });
+  } catch (error) {
+    console.error('Failed to remove song from playlist:', error);
+    return NextResponse.json({ error: 'Failed to remove song from playlist' }, { status: 500 });
   }
 }

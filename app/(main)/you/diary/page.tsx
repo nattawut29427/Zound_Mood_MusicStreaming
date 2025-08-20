@@ -37,7 +37,7 @@ function DiaryCard({
 
   return (
     <div
-      className="border rounded-lg p-3 mb-4 shadow-sm bg-white w-[280px] h-[32rem] text-sm flex flex-col hover:bg-gray-100"
+      className="border rounded-lg p-3 mb-4 shadow-sm bg-white w-[280px] h-[30rem] text-sm flex flex-col hover:bg-gray-100"
       onClick={onClick}
     >
       {/* Header */}
@@ -136,7 +136,7 @@ export default function DiaryPage() {
   if (loading) return <div className="p-4">Loading...</div>;
 
   return (
-    <div className="max-w-screen mb-20 mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-screen  mx-auto px-4 py-8 space-y-6">
         <h1 className="text-2xl font-bold mb-4">All Diaries</h1>
       <ScrollArea>
 

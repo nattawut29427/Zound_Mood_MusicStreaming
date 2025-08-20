@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import SongCover from "@/components/Songcover";
 import { Share2 } from "lucide-react";
 import AddToPlaylistButton from "@/components/Plus";
 import Image from "next/image";
@@ -10,6 +9,7 @@ import { getServerSession } from "next-auth";
 import FollowUserWrapper from "@/components/button/Bt";
 import { generateUserSlug } from "@/lib/slug";
 import Link from "next/link";
+import PlaylistCover from "@/components/PlaylistCover";
 
 export default async function SongDetailPage({
   params,
@@ -71,7 +71,7 @@ export default async function SongDetailPage({
       <div className="flex p-10 space-x-10 bg-black/60 ">
         {/* ปกเพลง */}
         <div className="relative">
-          <SongCover
+          <PlaylistCover
             picture={song.picture || "/default-cover.jpg"}
             name={song.name_song}
           />

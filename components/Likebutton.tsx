@@ -9,7 +9,10 @@ type LikeButtonProps = {
   initialLiked?: boolean;
 };
 
-export default function LikeButton({ songId, initialLiked = false }: LikeButtonProps) {
+export default function LikeButton({
+  songId,
+  initialLiked = false,
+}: LikeButtonProps) {
   const { data: session } = useSession();
   const [liked, setLiked] = useState(initialLiked);
   const [loading, setLoading] = useState(false);
@@ -42,11 +45,18 @@ export default function LikeButton({ songId, initialLiked = false }: LikeButtonP
   };
 
   return (
-    <Heart
+    <button
       onClick={toggleLike}
-      className={`w-8 h-8 cursor-pointer transition-colors ${
-        liked ? "text-red-500" : "text-white hover:text-red-400"
-      } ${loading ? "opacity-50 pointer-events-none" : ""}`}
-    />
+      disabled={loading}
+      className={`w-10 h-10 flex items-center justify-center rounded-full 
+        transition-all duration-200 shadow-md cursor-pointer
+        ${liked ? "bg-red-100 hover:bg-red-200" : "bg-neutral-800 hover:bg-neutral-700"} 
+        ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+    >
+      <Heart
+        className={`w-6 h-6 transition-colors duration-200 
+          ${liked ? "fill-red-500 text-red-500" : "text-white hover:text-red-400"}`}
+      />
+    </button>
   );
 }

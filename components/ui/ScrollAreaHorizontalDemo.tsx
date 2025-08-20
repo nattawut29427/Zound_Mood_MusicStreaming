@@ -82,6 +82,7 @@ export function ScrollAreaHorizontalDemo() {
                       className="shrink-0 cursor-pointer w-44"
                     >
                       <SongCover
+                        songId={song.id}
                         picture={song.picture}
                         name={song.name_song}
                         isPlaying={songIsPlaying} // ส่งสถานะเข้าไป
