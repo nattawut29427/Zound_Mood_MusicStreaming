@@ -39,6 +39,7 @@ export default async function SongDetailPage() {
             <SongCover
               picture={playlist.pic_playlists ?? ""}
               name={playlist.name_playlist}
+              
               />
             <figcaption className="pt-2 text-xs text-muted-foreground">
               <span className="font-bold text-md text-white">

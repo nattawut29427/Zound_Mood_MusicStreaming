@@ -11,7 +11,7 @@ export default function SongCover({
   name,
   isPlaying,
   onImageChange,
-  onPlayClick,
+  onPlayClick,  
   onPauseClick,
 }: {
   picture: string;

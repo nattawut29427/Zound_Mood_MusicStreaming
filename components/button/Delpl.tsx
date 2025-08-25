@@ -35,7 +35,7 @@ export default function Delpl({ playlistIdToDelete, songId }: DelplProps) {
     <div>
       <MinusCircle
         onClick={handleDel}
-        className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer transition-colors duration-200"
+        className="w-5 h-5  text-gray-400 hover:text-red-500 cursor-pointer transition-colors duration-200"
       />
     </div>
   );

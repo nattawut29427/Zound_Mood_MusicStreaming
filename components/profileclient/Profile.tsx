@@ -41,7 +41,7 @@ export default function ProfileClient({ user }: ProfileClientProps) {
 
         <div className="flex items-center gap-2">
           {isOwner ? (
-            <button className="bg-gray-700 text-white px-3 py-1 rounded-full text-sm cursor-pointer">
+            <button className="bg-gray-200 text-black px-3 py-1 rounded-full text-sm cursor-pointer">
               Edit profile
             </button>
           ) : (

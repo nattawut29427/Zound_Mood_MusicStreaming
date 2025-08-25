@@ -38,10 +38,8 @@ export default function Profile() {
           <h2 className="text-xl font-bold"></h2>
         )}
         <div className="flex items-center gap-2 pr-6">
-          {/* <button className="bg-gray-700 text-white px-3 py-1 rounded-full text-sm cursor-pointer">
-            Edit profile
-          </button> */}
-          <FollowBt/>
+       
+          {/* <FollowBt/> */}
           <button className="bg-gray-200 text-black px-3 py-1 rounded-full text-sm  cursor-pointer">
             Share
           </button>
@@ -51,7 +49,7 @@ export default function Profile() {
       <div>
         {/* Navigator */}
         <div className="mt-6 ">
-          <Navigator />
+          <Navigator userId=""/>
         </div>
       </div>
     </div>
