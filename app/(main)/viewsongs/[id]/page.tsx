@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Share2 } from "lucide-react";
+import { Share2, Eye, Play } from "lucide-react";
 import AddToPlaylistButton from "@/components/Plus";
 import Image from "next/image";
 import SongDetailControls from "@/components/SongdetailControl";
@@ -65,6 +65,21 @@ export default async function SongDetailPage({
     },
   });
 
+  function formatCount(count?: number) {
+    if (!count) return "0";
+
+    if (count >= 1_000_000_000) {
+      return (count / 1_000_000_000).toFixed(1).replace(/\.0$/, "") + "b";
+    }
+    if (count >= 1_000_000) {
+      return (count / 1_000_000).toFixed(1).replace(/\.0$/, "") + "m";
+    }
+    if (count >= 1_000) {
+      return (count / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+    }
+    return count.toString();
+  }
+
   return (
     <div className="bg-neutral-900 min-h-screen text-white">
       {/* ส่วนบน: ปก + ข้อมูลเพลง */}
@@ -101,11 +116,11 @@ export default async function SongDetailPage({
         </div>
       </div>
 
-      {/* ส่วนล่าง: ศิลปิน + คำอธิบาย */}
-      <div className="flex px-10 mt-10 space-x-10">
+      {/* ส่วนล่าง: ศิลปิน + คำอธิบาย + สถิติ */}
+      <div className="flex flex-col md:flex-row px-10 mt-10 gap-8">
         {/* ด้านซ้าย: ศิลปิน */}
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-600">
+        <div className="flex flex-col items-center space-y-4 ">
+          <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-700 shadow-lg">
             {song.uploader && (
               <Link
                 href={`/see/${generateUserSlug({
@@ -118,29 +133,54 @@ export default async function SongDetailPage({
                   alt={song.uploader.name || "avatar"}
                   fill
                   style={{ objectFit: "cover" }}
-                  sizes="96px"
-                  className="cursor-pointer hover:opacity-80 transition-opacity duration-300"
+                  sizes="112px"
+                  className="cursor-pointer hover:scale-105 transition-transform duration-300"
                 />
               </Link>
             )}
           </div>
-          <p className="text-gray-300">{song.uploader?.name}</p>
-          <p>{followerCount} followers</p>
+          <p className="text-white font-semibold text-lg">{song.uploader?.name}</p>
+          <p className="text-gray-400 text-sm">{followerCount} followers</p>
           <FollowUserWrapper
             initialIsFollowing={!!isFollowing}
             userIdToFollow={song.uploader?.id}
           />
         </div>
 
-        {/* ด้านขวา: คำอธิบาย */}
-        <div className="flex-1 bg-neutral-800 p-6 rounded-md">
-          <h2 className="text-xl font-bold mb-2">Description</h2>
-          {/* <p>{song.description || "No description provided."}</p> */}
+        {/* ด้านกลาง: คำอธิบาย */}
+        <div className="flex-1 bg-gradient-to-b from-neutral-800 to-neutral-900 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+          <h2 className="text-2xl font-bold mb-4 text-white">Description</h2>
+          <p className="text-gray-300 leading-relaxed">
+            {song.description || "No description provided."}
+          </p>
         </div>
-        <div className="w-64 bg-black ">
-          <p>{songStat?.like_count}</p>
-          <p>{songStat?.play_count}</p>
+
+        {/* ด้านขวา: สถิติเพลง */}
+        <div className="w-36 bg-neutral-900 rounded-xl flex flex-rows  items-start gap-4 shadow-md">
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-red-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+              </svg>
+              <p className="text-white font-semibold">{formatCount(songStat?.like_count)}</p>
+            </div>
+
+          </div>
+
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-blue-500" />
+              <p className="text-white font-semibold">{formatCount(songStat?.play_count)}</p>
+            </div>
+
+          </div>
         </div>
+
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ export default function HomePage() {
     <div>
       <div className="">
         <ScrollAreaHorizontalDemo />
+        
       </div>
 
      
