@@ -287,6 +287,7 @@ export default function Sidebar2() {
         <div className="flex flex-col items-center justify-center my-2 space-y-2">
           <div className="space-y-4 w-48 h-fit rounded-lg">
             <SongCover
+              songId={selectedPlaylist?.id ?? 0}
               picture={editPreviewUrl}
               name="editPreview"
               onImageChange={(file) => {

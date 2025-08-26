@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Share2, Eye, Play } from "lucide-react";
+import { Share2, Eye, Play, Pencil } from "lucide-react";
 import AddToPlaylistButton from "@/components/Plus";
 import Image from "next/image";
 import SongDetailControls from "@/components/SongdetailControl";
@@ -10,13 +10,15 @@ import FollowUserWrapper from "@/components/button/Bt";
 import { generateUserSlug } from "@/lib/slug";
 import Link from "next/link";
 import PlaylistCover from "@/components/PlaylistCover";
+import EditSongButton from "@/components/button/Editsg";
+
 
 export default async function SongDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const songId = Number(params.id);
+  const songId = await Number(params.id);
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -45,7 +47,11 @@ export default async function SongDetailPage({
 
   const song = await prisma.song.findUnique({
     where: { id: songId },
-    include: { uploader: true },
+    include: {
+      uploader: true,
+      song_tags: true,
+
+    },
   });
 
   if (!song) return <div>Song not found</div>;
@@ -81,7 +87,7 @@ export default async function SongDetailPage({
   }
 
   return (
-    <div className="bg-neutral-900 min-h-screen text-white">
+    <div className="bg-neutral-900 min-h-screen text-white ">
       {/* ส่วนบน: ปก + ข้อมูลเพลง */}
       <div className="flex p-10 space-x-10 bg-black/60 ">
         {/* ปกเพลง */}
@@ -103,13 +109,25 @@ export default async function SongDetailPage({
               <SongDetailControls song={song} />
             </div>
             <div className="text-sm px-4 py-1 rounded-full">
-              <div className="flex space-x-6">
-                <Likebutton songId={song.id} initialLiked={isLiked} />
-                <AddToPlaylistButton
-                  songId={song.id}
-                  picture={song.picture ?? ""}
-                />
-                <Share2 className="w-9 h-9   hover:text-yellow-300 cursor-pointer" />
+              <div className="flex space-x-6 items-center">
+                {song.uploader?.id === session.user.id ? (
+                  // ถ้าเป็นเพลงตัวเอง แสดงเฉพาะ Edit
+
+                  <EditSongButton song={{
+                    ...song,
+                    song_tags: song.song_tags.map((tag: any) => ({
+                      name_tag: tag.name_tag ?? "",
+                    })),
+                  }} />
+
+                ) : (
+                  // ถ้าไม่ใช่เพลงตัวเอง แสดงปุ่มปกติ
+                  <>
+                    <Likebutton songId={song.id} initialLiked={isLiked} />
+                    <AddToPlaylistButton songId={song.id} picture={song.picture ?? ""} />
+                    <Share2 className="w-9 h-9 hover:text-yellow-300 cursor-pointer" />
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -117,7 +135,7 @@ export default async function SongDetailPage({
       </div>
 
       {/* ส่วนล่าง: ศิลปิน + คำอธิบาย + สถิติ */}
-      <div className="flex flex-col md:flex-row px-10 mt-10 gap-8">
+      <div className="flex flex-col md:flex-row px-10 mt-10 mb-20 gap-8">
         {/* ด้านซ้าย: ศิลปิน */}
         <div className="flex flex-col items-center space-y-4 ">
           <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-700 shadow-lg">
@@ -150,31 +168,23 @@ export default async function SongDetailPage({
         {/* ด้านกลาง: คำอธิบาย */}
         <div className="flex-1 bg-gradient-to-b from-neutral-800 to-neutral-900 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
           <h2 className="text-2xl font-bold mb-4 text-white">Description</h2>
-          <p className="text-gray-300 leading-relaxed">
+          <section className="text-gray-300 leading-relaxed whitespace-pre-line">
             {song.description || "No description provided."}
-          </p>
+          </section>
         </div>
 
         {/* ด้านขวา: สถิติเพลง */}
         <div className="w-36 bg-neutral-900 rounded-xl flex flex-rows  items-start gap-4 shadow-md">
           <div className="flex flex-col items-center gap-1">
             <div className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-red-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
-              </svg>
+              <Play className="h-5 w-5 text-neutral-600" />
               <p className="text-white font-semibold">{formatCount(songStat?.like_count)}</p>
             </div>
-
           </div>
 
           <div className="flex flex-col items-center gap-1">
             <div className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-blue-500" />
+              <Eye className="h-5 w-5 text-neutral-600" />
               <p className="text-white font-semibold">{formatCount(songStat?.play_count)}</p>
             </div>
 
