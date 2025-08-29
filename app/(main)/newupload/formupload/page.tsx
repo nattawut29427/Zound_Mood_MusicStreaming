@@ -1,23 +1,54 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useFile } from "@/app/context/Filecontext";
 import { useSession } from "next-auth/react";
+import Cropper from "react-easy-crop";
+import getCroppedImg from "@/lib/getCroppedImg";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
 export default function Page() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
-  const { file } = useFile(); // ดึงไฟล์จาก context
+  const { file } = useFile();
+
   const [nameSong, setNameSong] = useState("");
   const [message, setMessage] = useState("");
   const [picture, setPicture] = useState<File | null>(null);
-  const [tag, setTag] = useState("");
   const [description, setDescription] = useState("");
 
+  // Tag state
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+
+  // Crop states
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handlePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setPicture(e.target.files[0]);
+    if (e.target.files?.[0]) setPicture(e.target.files[0]);
+  };
+
+  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === " " || e.key === "Enter") && tagInput.trim() !== "") {
+      e.preventDefault();
+      if (!tags.includes(tagInput.trim())) {
+        setTags([...tags, tagInput.trim()]);
+      }
+      setTagInput("");
     }
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag));
   };
 
   const handleUpload = async () => {
@@ -27,39 +58,40 @@ export default function Page() {
     }
 
     try {
-      const songKey = `songs/${Date.now()}_${file.name}`;
-      const picKey = `pictures/${Date.now()}_${picture.name}`;
+      // Crop รูปก่อนอัปโหลด
+      const croppedBlob = await getCroppedImg(picture, croppedAreaPixels);
+      const croppedFile = new File([croppedBlob], picture.name, { type: picture.type });
 
+      const songKey = `songs/${Date.now()}_${file.name}`;
+      const picKey = `pictures/${Date.now()}_${croppedFile.name}`;
+
+      // signed URL เพลง
       const songUrlRes = await fetch(
-        `/api/upload?key=${encodeURIComponent(
-          songKey
-        )}&contentType=${encodeURIComponent(file.type)}`
+        `/api/upload?key=${encodeURIComponent(songKey)}&contentType=${encodeURIComponent(file.type)}`
       );
       if (!songUrlRes.ok) throw new Error("ขอ signed URL สำหรับเพลงล้มเหลว");
       const { url: songUploadUrl } = await songUrlRes.json();
 
-      const songUploadRes = await fetch(songUploadUrl, {
+      await fetch(songUploadUrl, {
         method: "PUT",
         headers: { "Content-Type": file.type },
         body: file,
       });
-      if (!songUploadRes.ok) throw new Error("อัปโหลดเพลงล้มเหลว");
 
+      // signed URL รูป
       const picUrlRes = await fetch(
-        `/api/upload?key=${encodeURIComponent(
-          picKey
-        )}&contentType=${encodeURIComponent(picture.type)}`
+        `/api/upload?key=${encodeURIComponent(picKey)}&contentType=${encodeURIComponent(croppedFile.type)}`
       );
       if (!picUrlRes.ok) throw new Error("ขอ signed URL สำหรับรูปภาพล้มเหลว");
       const { url: picUploadUrl } = await picUrlRes.json();
 
-      const picUploadRes = await fetch(picUploadUrl, {
+      await fetch(picUploadUrl, {
         method: "PUT",
-        headers: { "Content-Type": picture.type },
-        body: picture,
+        headers: { "Content-Type": croppedFile.type },
+        body: croppedFile,
       });
-      if (!picUploadRes.ok) throw new Error("อัปโหลดรูปภาพล้มเหลว");
 
+      // บันทึกข้อมูลเพลง
       const saveRes = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,7 +100,7 @@ export default function Page() {
           audio_urlKey: songKey,
           pictureKey: picKey,
           uploaded_by: userId,
-          tag,
+           tag: tags.join(","), 
           description,
         }),
       });
@@ -82,28 +114,69 @@ export default function Page() {
       setMessage("อัปโหลดเพลงและรูปภาพสำเร็จ!");
       setPicture(null);
       setNameSong("");
+      setTags([]);
     } catch (error: any) {
       setMessage("เกิดข้อผิดพลาด: " + error.message);
     }
-
   };
 
   return (
-    <div className="text-white mb-20">
-      <div className="font-bold p-10 text-3xl mb-8">Upload your song</div>
+    <div className="text-white min-h-screen p-10">
+      <h1 className="text-4xl font-bold mb-6">Upload Your Song</h1>
 
-      <div className="flex p-10 flex-wrap gap-4 justify-between">
-        <div className="w-72">
-          <label
-            htmlFor="file-upload"
-            className="flex flex-col items-center justify-center border-2 border-dashed border-white rounded-2xl h-72 cursor-pointer transition hover:bg-white/10"
-          >
-            <div className="text-white font-semibold text-lg">
-              Upload picture
-            </div>
-            <div className="text-sm text-gray-400 mt-1">(Only .jpg, .png)</div>
-          </label>
+      {message && <p className="mb-6 text-center text-gray-300 font-medium">{message}</p>}
+
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Left: Picture Upload / Crop */}
+        <div className="flex flex-col items-center w-full md:w-80">
+          {!picture ? (
+            <label
+              htmlFor="file-upload"
+              className="flex flex-col items-center justify-center border-2 border-dashed border-white rounded-2xl h-72 w-full cursor-pointer hover:bg-white/10 transition"
+            >
+              <div className="text-white font-semibold text-lg">Upload Picture</div>
+              <div className="text-sm text-gray-400 mt-1">(Only .jpg, .png)</div>
+            </label>
+          ) : (
+            <>
+              <div className="relative w-full h-72 rounded-xl overflow-hidden bg-gray-800">
+                <Cropper
+                  image={URL.createObjectURL(picture)}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  showGrid={true}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                />
+              </div>
+
+              {/* Zoom slider */}
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.01}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="mt-4 w-full"
+              />
+
+              <button
+                type="button"
+                className="mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl"
+                onClick={() => {
+                  setPicture(null);
+                  fileInputRef.current?.click();
+                }}
+              >
+                Change Picture
+              </button>
+            </>
+          )}
           <input
+            ref={fileInputRef}
             id="file-upload"
             type="file"
             accept="image/*"
@@ -112,46 +185,60 @@ export default function Page() {
           />
         </div>
 
-        <div className="w-full md:w-1/2 flex flex-col gap-4">
-          <label className="text-white font-medium">Track title</label>
+        {/* Right: Song Info */}
+        <div className="flex-1 flex flex-col gap-4">
+          <label className="font-medium">Track Title</label>
           <input
             type="text"
             placeholder="Type your track title"
-            className="p-2 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none"
+            className="p-3 rounded-xl bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
             value={nameSong}
             onChange={(e) => setNameSong(e.target.value)}
           />
 
-          <label className="text-white font-medium">Tag</label>
-          <input
-            type="text"
-            placeholder="Type your tag"
-            className="p-2 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none"
-            value={tag}
-            onChange={(e) => setTag(e.target.value)}
-          />
+          <label className="font-medium">Tags</label>
+          <div className="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-white/10 focus-within:ring-2 focus-within:ring-violet-500">
+            {tags.map((tag, i) => (
+              <Badge
+                key={i}
+                variant="secondary"
+                className="flex items-center gap-1 px-3 py-1 rounded-full"
+              >
+                {tag}
+                <X
+                  size={14}
+                  className="cursor-pointer"
+                  onClick={() => removeTag(tag)}
+                />
+              </Badge>
+            ))}
+            <input
+              type="text"
+              placeholder="Type and press space/enter..."
+              className="flex-1 bg-transparent outline-none text-white placeholder-gray-400 min-w-[120px]"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagKeyDown}
+            />
+          </div>
 
-          <label className="text-white font-medium">Description</label>
+
+          <label className="font-medium">Description</label>
           <textarea
             rows={4}
             placeholder="Additional description"
-            className="p-2 rounded-lg bg-white/10 text-white placeholder-gray-400 focus:outline-none"
+            className="p-3 rounded-xl bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none flex-1"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-        </div>
-      </div>
 
-      <div className="mt-10 flex justify-end gap-4">
-        <button
-          onClick={handleUpload}
-          className="bg-pink-500 text-white font-semibold py-2 px-6 rounded-2xl"
-        >
-          Upload
-        </button>
-        {message && (
-          <p className="mt-4 text-center text-sm text-gray-300">{message}</p>
-        )}
+          <button
+            onClick={handleUpload}
+            className="mt-4 bg-violet-500 hover:bg-violet-600 transition w-fit px-4 text-white font-bold py-3 rounded-xl"
+          >
+            Upload
+          </button>
+        </div>
       </div>
     </div>
   );
