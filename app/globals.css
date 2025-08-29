@@ -194,3 +194,14 @@ h3 {
   font-size: 1.17em;
   font-weight: bold;
 }
+
+@keyframes gradientMove {
+  0% { background-position: 50% 0%; }
+  50% { background-position: 50% 30%; }
+  100% { background-position: 50% 0%; }
+}
+
+.animate-gradient {
+  animation: gradientMove 12s ease-in-out infinite;
+  background-size: 200% 200%; /* ทำให้มีพื้นที่ gradient เคลื่อนไหวได้ */
+}

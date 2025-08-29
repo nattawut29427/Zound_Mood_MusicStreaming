@@ -20,7 +20,7 @@ export default function LikedSongsClient({
       <div className="p-10 space-y-10">
         <h1 className="text-white font-bold text-4xl">Liked Songs</h1>
       </div>
-      <div className="grid lg:grid-cols-6 gap-4 px-10">
+      <div className="grid lg:grid-cols-6 gap-4 px-8">
         {likedSongs.map((like) => {
           const song = like.song;
           const songIsPlaying = currentTrack?.id === song.id && isPlaying;
@@ -33,6 +33,7 @@ export default function LikedSongsClient({
             >
               <div className="p-2">
                 <SongCover
+                  songId={song}
                   picture={song.picture ?? ""}
                   name={song.name_song}
                   isPlaying={songIsPlaying}

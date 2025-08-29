@@ -4,6 +4,10 @@ import { useRouter } from "next/navigation";
 import { useGeneratedPlaylist } from "@/app/context/GeneratedPlaylistContext";
 import React, { useState, useEffect } from "react";
 import { Song } from "@/components/types";
+import { Particles } from "@/components/magicui/particles";
+import { MorphingText } from "@/components/magicui/morphing-text";
+import { SparklesText } from "@/components/magicui/sparkles-text";
+import { AnimatedList } from "@/components/magicui/animated-list";
 
 const AIGenPage = () => {
   const router = useRouter();
@@ -57,31 +61,44 @@ const AIGenPage = () => {
   }
 
   return (
-    <main className="max-w-screen mx-10 mt-10 my-8 p-6 font-sans bg-white rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold mb-6 text-start text-gray-800">
-        สร้าง Playlist ด้วย AI
-      </h1>
+    <main className="h-full flex z-10 flex-col text-white aurora-bg overflow-hidden animate-gradient bg-gradient-to-t from-violet-600 via-20% via-purple-800 to-black  bg-[length:200%_200%]">
 
-      <textarea
-        placeholder="อยากฟังเพลงแบบไหน เช่น เพลงเหงา ๆ วันที่ฝนตก"
-        rows={3}
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        className="w-full p-3 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-      />
+      {/* ส่วนเนื้อหาด้านบน */}
+      <div className="flex-1 overflow-y-auto  p-6">
+        <h1 className="text-3xl font-extrabold mb-6 text-center"></h1>
+        <MorphingText texts={["Make your playlist", "with Ai", "What your feeling"]} />
+        <SparklesText className="text-md font-thin text-center" sparklesCount={0}>
+          Let AI create a playlist for you
+        </SparklesText>
 
-      <div className="flex items-end justify-end">
-        <button
-          onClick={handleGenerate}
-          disabled={loading || !prompt.trim()}
-          className="mt-3 px-4 py-2 text-base  bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          {loading ? "กำลังสร้าง..." : "สร้าง Playlist"}
-        </button>
-
-        {error && <p className="text-red-500 mt-3">{error}</p>}
+        <Particles className="relative inset-0 z-0" />
       </div>
+
+       
+
+      {/* กล่อง input ที่อยู่ล่างสุดเหมือน ChatGPT */}
+      <div className=" p-4  mb-20">
+        <div className="flex items-center w-full  bg-white border border-gray-300 rounded-full focus-within:ring-2 focus-within:ring-violet-700 focus-within:border-transparent transition-shadow">
+          <input
+            placeholder="อยากฟังเพลงแบบไหน เช่น เพลงเหงา ๆ วันที่ฝนตก"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            className="w-full p-3 pl-5 bg-transparent border-none text-black rounded-full focus:outline-none focus:ring-0"
+          />
+
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !prompt.trim()}
+            className="mr-2 px-4 py-2 text-base bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0"
+          >
+            {loading ? "กำลังสร้าง..." : "สร้าง"}
+          </button>
+        </div>
+      </div>
+      
     </main>
+
+
   );
 };
 

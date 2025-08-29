@@ -1,6 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { AuroraText } from "@/components/magicui/aurora-text";
+import { SparklesText } from "@/components/magicui/sparkles-text";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
@@ -12,10 +12,12 @@ export default function Header() {
   const { data: session, status } = useSession();
 
   return (
-    <header className="bg-black p-6 h-16 w-full sticky top-0 z-10 mb-4 flex items-center justify-between">
+    <header className="bg-black p-5 h-16 w-full sticky top-0 z-10 mb-4 pb-2 flex items-center justify-between">
       <div className="text-white font-bold text-2xl">
         <Link href="/">
-          <AuroraText>Zound mooz</AuroraText>
+
+
+          <SparklesText>Zound Mood</SparklesText>
         </Link>
       </div>
 
