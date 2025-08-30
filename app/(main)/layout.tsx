@@ -12,7 +12,7 @@ import { FileProvider } from "@/app/context/Filecontext";
 import { SidebarProvider } from "@/app/context/SidebarContext";
 import { GeneratedPlaylistProvider } from "@/app/context/GeneratedPlaylistContext";
 import PathWatcher from "@/components/path/PathWatcher";
-import { ToastProvider } from "@/components/ui/toast";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -9,11 +9,16 @@ import FollowBt from "@/components/button/FollowBt";
 export default function Profile() {
   const { data: session, status } = useSession();
 
+
   return (
     <div className="mb-20">
-      {/* Banner */}
+      
       <div>
-        <Card />
+        {status === "authenticated" && session ? (
+          <Card userId={session.user.id} />
+        ) : (
+          <Card userId="" /> 
+        )}
       </div>
 
       {/* Profile image */}
@@ -38,7 +43,7 @@ export default function Profile() {
           <h2 className="text-xl font-bold"></h2>
         )}
         <div className="flex items-center gap-2 pr-6">
-       
+
           {/* <FollowBt/> */}
           <button className="bg-gray-200 text-black px-3 py-1 rounded-full text-sm  cursor-pointer">
             Share
@@ -49,7 +54,7 @@ export default function Profile() {
       <div>
         {/* Navigator */}
         <div className="mt-6 ">
-          <Navigator userId=""/>
+          <Navigator userId="" />
         </div>
       </div>
     </div>

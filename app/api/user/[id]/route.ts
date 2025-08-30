@@ -91,3 +91,45 @@ export async function GET(
   });
 }
 
+export async function POST(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
+  const { id } = context.params;
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!id) {
+    return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+  }
+
+  const body = await req.json();
+  const { name, image, bg_image } = body; 
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        name: name || undefined,
+        image: image || undefined,
+        bg_image: bg_image || undefined,
+      },
+    });
+
+    return NextResponse.json({
+      message: "User updated successfully",
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        image: updatedUser.image,
+        bg:updatedUser.bg_image ?? null,
+      },
+    });
+  } catch (err) {
+    console.error("Update user failed:", err);
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
+}

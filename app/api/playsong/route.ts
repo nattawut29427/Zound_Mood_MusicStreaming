@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { generatePresignedGetUrl } from "@/lib/r2";
-import { getServerSession } from "next-auth"; // ถ้าใช้ auth
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 
@@ -65,3 +65,62 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
+
+export async function POST(req: NextRequest) {
+  const { songId, action } = await req.json();
+  const session = await getServerSession(authOptions);
+
+  if (!songId || !action) {
+    return NextResponse.json(
+      { error: "Missing songId or action" },
+      { status: 400 }
+    );
+  }
+
+  const parsedSongId = parseInt(songId);
+  if (isNaN(parsedSongId)) {
+    return NextResponse.json({ error: "Invalid songId" }, { status: 400 });
+  }
+
+  const userId = session?.user?.id;
+
+  try {
+    if (action === "view") {
+      const song = await prisma.song.findUnique({
+        where: { id: parsedSongId },
+        select: { uploaded_by: true },
+      });
+
+      if (!song) {
+        return NextResponse.json({ error: "Song not found" }, { status: 404 });
+      }
+
+      // แปลง type ให้ตรงกัน (uploaded_by เป็น String)
+      if (userId && userId === song.uploaded_by) {
+        return NextResponse.json({
+          success: true,
+          message: "Owner view, no increment",
+        });
+      }
+
+      console.log("Incrementing play_count for songId:", parsedSongId);
+
+      const stat = await prisma.songStat.upsert({
+        where: { song_id: parsedSongId }, // ใช้ key ตรงๆ ได้
+        update: { play_count: { increment: 1 } },
+        create: { song_id: parsedSongId, play_count: 1, like_count: 0 },
+      });
+
+      console.log("Updated stat:", stat);
+
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (error) {
+    console.error("Error updating song stat:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+

@@ -1,3 +1,4 @@
+// lib/Groq.ts
 import OpenAI from "openai";
 
 const groq = new OpenAI({
@@ -55,3 +56,33 @@ ${JSON.stringify(songs, null, 2)}
     return { playlist: [], reason: "" };
   }
 }
+
+// export async function streamGeneratePlaylist(prompt: string, songs: any[]) {
+//   const systemPrompt = `
+// คุณคือผู้ช่วยที่ทำหน้าที่เลือกเพลงจากฐานข้อมูลด้านล่าง
+// - เลือกเพลงที่ตรงกับอารมณ์/ข้อความที่ผู้ใช้ให้มา
+// - อธิบายเหตุผลอย่างเป็นธรรมชาติว่าทำไมถึงเลือกเพลงแต่ละเพลง
+// - ตอบกลับเป็นข้อความภาษามนุษย์ ไม่ใช่ JSON
+// `;
+
+//   const userPrompt = `
+// ข้อความจากผู้ใช้: ${prompt}
+
+// ฐานข้อมูลเพลงที่คุณมี:
+// ${songs.map(
+//     (s) =>
+//       `- ${s.name_song} (${s.song_tags}) : ${s.description ?? "ไม่มีคำอธิบาย"}`
+//   ).join("\n")}
+
+// กรุณาเลือกเพลงที่เหมาะสม และอธิบายเหตุผลในการเลือก
+// `;
+
+//   return groq.chat.completions.create({
+//     model: "mixtral-8x7b-32768", // หรือรุ่นอื่นที่คุณใช้
+//     stream: true,
+//     messages: [
+//       { role: "system", content: systemPrompt },
+//       { role: "user", content: userPrompt },
+//     ],
+//   });
+// }

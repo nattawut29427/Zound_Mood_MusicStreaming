@@ -12,19 +12,19 @@ import Link from "next/link";
 import PlaylistCover from "@/components/PlaylistCover";
 import EditSongButton from "@/components/button/Editsg";
 
-
 export default async function SongDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const songId = await Number(params.id);
+  const songId = Number(params.id);
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return <div className="text-white">Unauthorized</div>;
   }
 
+  // ✅ เช็คว่า user กด like เพลงนี้แล้วหรือยัง
   const likedRecord = await prisma.likeSong.findUnique({
     where: {
       user_id_song_id: {
@@ -33,35 +33,44 @@ export default async function SongDetailPage({
       },
     },
   });
+  const isLiked = !!likedRecord;
+
+  // ✅ ดึง play_count จาก SongStat
   const songStat = await prisma.songStat.findUnique({
     where: {
       song_id: songId,
     },
     select: {
-      like_count: true,
       play_count: true,
     },
   });
 
-  const isLiked = !!likedRecord;
+  // ✅ นับจำนวน like ของเพลงนี้
+  const likeCount = await prisma.likeSong.count({
+    where: {
+      song_id: songId,
+    },
+  });
 
+  // ✅ ดึงข้อมูลเพลง
   const song = await prisma.song.findUnique({
     where: { id: songId },
     include: {
       uploader: true,
       song_tags: true,
-
     },
   });
 
   if (!song) return <div>Song not found</div>;
 
+  // ✅ จำนวน followers ของ uploader
   const followerCount = await prisma.follow.count({
     where: {
-      followed_user_id: song.uploader?.id, // นับว่ามีคนติดตาม uploader คนนี้กี่คน
+      followed_user_id: song.uploader?.id,
     },
   });
 
+  // ✅ เช็คว่ากำลัง follow uploader อยู่หรือไม่
   const isFollowing = await prisma.follow.findUnique({
     where: {
       following_user_id_followed_user_id: {
@@ -71,8 +80,8 @@ export default async function SongDetailPage({
     },
   });
 
-  function formatCount(count?: number) {
-    if (!count) return "0";
+  function formatCount(count?: number): string {
+    if (!count || count <= 0) return "0";
 
     if (count >= 1_000_000_000) {
       return (count / 1_000_000_000).toFixed(1).replace(/\.0$/, "") + "b";
@@ -85,6 +94,7 @@ export default async function SongDetailPage({
     }
     return count.toString();
   }
+
 
   return (
     <div className="bg-neutral-900 min-h-screen text-white ">
@@ -105,26 +115,29 @@ export default async function SongDetailPage({
             <p className="text-gray-400 mt-1">{song.uploader?.name}</p>
           </div>
           <div className="flex justify-between mt-4 ">
-            <div className="">
+            <div>
               <SongDetailControls song={song} />
             </div>
             <div className="text-sm px-4 py-1 rounded-full">
               <div className="flex space-x-6 items-center">
                 {song.uploader?.id === session.user.id ? (
                   // ถ้าเป็นเพลงตัวเอง แสดงเฉพาะ Edit
-
-                  <EditSongButton song={{
-                    ...song,
-                    song_tags: song.song_tags.map((tag: any) => ({
-                      name_tag: tag.name_tag ?? "",
-                    })),
-                  }} />
-
+                  <EditSongButton
+                    song={{
+                      ...song,
+                      song_tags: song.song_tags.map((tag: any) => ({
+                        name_tag: tag.name_tag ?? "",
+                      })),
+                    }}
+                  />
                 ) : (
                   // ถ้าไม่ใช่เพลงตัวเอง แสดงปุ่มปกติ
                   <>
                     <Likebutton songId={song.id} initialLiked={isLiked} />
-                    <AddToPlaylistButton songId={song.id} picture={song.picture ?? ""} />
+                    <AddToPlaylistButton
+                      songId={song.id}
+                      picture={song.picture ?? ""}
+                    />
                     <Share2 className="w-9 h-9 hover:text-yellow-300 cursor-pointer" />
                   </>
                 )}
@@ -157,7 +170,9 @@ export default async function SongDetailPage({
               </Link>
             )}
           </div>
-          <p className="text-white font-semibold text-lg">{song.uploader?.name}</p>
+          <p className="text-white font-semibold text-lg">
+            {song.uploader?.name}
+          </p>
           <p className="text-gray-400 text-sm">{followerCount} followers</p>
           <FollowUserWrapper
             initialIsFollowing={!!isFollowing}
@@ -174,23 +189,20 @@ export default async function SongDetailPage({
         </div>
 
         {/* ด้านขวา: สถิติเพลง */}
-        <div className="w-36 bg-neutral-900 rounded-xl flex flex-rows  items-start gap-4 shadow-md">
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex items-center gap-2">
-              <Play className="h-5 w-5 text-neutral-600" />
-              <p className="text-white font-semibold">{formatCount(songStat?.like_count)}</p>
-            </div>
+        <div className="w-36 bg-neutral-900 rounded-xl flex flex-row gap-4 items-start">
+          <div className="flex items-center gap-2">
+            <Play className="h-5 w-5 text-neutral-600" />
+            <p className="text-white font-semibold">
+              {formatCount(songStat?.play_count ?? 0)}
+            </p>
           </div>
-
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-neutral-600" />
-              <p className="text-white font-semibold">{formatCount(songStat?.play_count)}</p>
-            </div>
-
+          <div className="flex items-center gap-2">
+            <Play className="h-5 w-5 text-neutral-600" />
+            <p className="text-white font-semibold">
+              {formatCount(likeCount)}
+            </p>
           </div>
         </div>
-
       </div>
     </div>
   );

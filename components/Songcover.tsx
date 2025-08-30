@@ -49,7 +49,7 @@
     };
 
     useEffect(() => {
-      if (!picture) return; // ✅ hook ถูกเรียกเสมอ
+      if (!picture) return; //  hook ถูกเรียกเสมอ
       if (picture.startsWith("blob:")) {
         setLoading(false);
       } else {

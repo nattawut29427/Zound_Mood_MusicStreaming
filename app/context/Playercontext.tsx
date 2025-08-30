@@ -41,6 +41,8 @@ export const PlayerContext = createContext<PlayerContextType>(
   {} as PlayerContextType
 );
 
+
+
 export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [currentTrack, setCurrentTrack] = useState<Song | null>(null);
   const [sound, setSound] = useState<Howl | null>(null);
@@ -65,6 +67,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const playingUrl = currentDiaryAudioUrl ? signedUrlDiary : signedUrl;
 
+
   const playQueue = (songs: Song[], startIndex: number) => {
     if (songs.length === 0) return;
 
@@ -72,6 +75,18 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     setQueueIndex(startIndex);
     setCurrentTrack(songs[startIndex]);
   };
+
+  const logSongPlay = async (songId: number) => {
+  try {
+    await fetch("/api/playsong", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ songId, action: "view" }),
+    });
+  } catch (err) {
+    console.error("Song play log failed:", err);
+  }
+};
 
   const playDiary = (diary: Diary) => {
     if (!diary.song) return;
@@ -153,6 +168,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
       onplay: () => {
         setIsPlaying(true);
         setDuration(newSound.duration());
+        logSongPlay(currentTrack.id);
       },
       onend: () => {
         if (!isLooping) {
@@ -252,6 +268,8 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPlaying]);
+
+  
 
   return (
     <PlayerContext.Provider

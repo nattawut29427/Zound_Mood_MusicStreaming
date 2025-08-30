@@ -5,7 +5,7 @@ export async function uploadImageToR2(file: File): Promise<string> {
     const safeName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`;
     const pictureKey = `pictures/${safeName}`;
 
-    // ✅ ขอ signed PUT URL จาก API /api/upload
+    // ขอ signed PUT URL จาก API /api/upload
     const signedUrlRes = await fetch(
       `/api/upload?key=${encodeURIComponent(pictureKey)}&contentType=${encodeURIComponent(file.type)}`
     );
@@ -16,7 +16,7 @@ export async function uploadImageToR2(file: File): Promise<string> {
 
     const { url: uploadUrl } = await signedUrlRes.json();
 
-    // ✅ ส่งไฟล์เข้า R2
+    //  ส่งไฟล์เข้า R2
     const uploadRes = await fetch(uploadUrl, {
       method: "PUT",
       headers: { "Content-Type": file.type },

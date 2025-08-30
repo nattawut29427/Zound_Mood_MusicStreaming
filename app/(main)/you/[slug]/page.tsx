@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import { extractIdFromSlug } from "@/lib/slug";
 
 interface ProfilePageProps {
-  params: Promise<{ slug: string }>; // 👈 ต้องเป็น Promise
+  params: Promise<{ slug: string }>; 
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const { slug } = await params; // 👈 ต้อง await ก่อน
+  const { slug } = await params; 
   const userId = extractIdFromSlug(slug);
 
   const user = await prisma.user.findUnique({
