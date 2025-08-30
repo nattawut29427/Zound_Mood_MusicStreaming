@@ -18,6 +18,7 @@ model User {
   name   String?
   level      String          @default("user") 
   image   String?
+  bg_image String?
   created_at DateTime  @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
