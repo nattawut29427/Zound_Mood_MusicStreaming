@@ -72,10 +72,15 @@ export const authOptions: NextAuthOptions = {
     session: async ({ session, token }) => {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.image = token.picture as string; // ✅ ต้องมีบรรทัดนี้!
-        session.user.username = token.username as string; // fallback เผื่อไม่มี username
+
+        // โหลด user จาก database เพื่อดึงรูปล่าสุด
+        const dbUser = await prisma.user.findUnique({ where: { id: token.id } });
+        if (dbUser) {
+          session.user.image = dbUser.image || session.user.image;
+          session.user.username = dbUser.name || session.user.username;
+        }
       }
       return session;
-    },
+    }
   },
 };

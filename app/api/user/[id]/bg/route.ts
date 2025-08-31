@@ -3,12 +3,25 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { uploadImageToR2 } from "@/lib/uploadImage"; 
+import { getSignedUrl } from "@/lib/getSignedurl";
+
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const user = await prisma.user.findUnique({
+    where: { id: params.id },
+    select: { bg_image: true },
+  });
+
+  if (!user?.bg_image) return NextResponse.json({ bg_image: null });
+
+  const url = await getSignedUrl(user.bg_image);
+  return NextResponse.json({ bg_image: url });
+}
 
 export async function PUT(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
-    const id = params.id; // ตรงนี้ id จะไม่ undefined
+    const id = await params.id; 
     console.log("Updating background for user:", id);
 
     const session = await getServerSession(authOptions);

@@ -8,50 +8,35 @@ export async function GET(
   req: NextRequest,
   context: { params: { id: string } }
 ) {
-  const { id } = await context.params;
+  const { id } =  await context.params; 
 
   if (!id) {
     return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
   }
 
-  // เช็คว่า user login ไหม (ถ้าอยากเปิดให้ทุกคนเข้าดูก็ลบไ
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ดึง user ตาม params.id (ไม่ใช่ session.user.id)
+  console.log("params:", context.params)
+
   const user = await prisma.user.findUnique({
     where: { id },
     include: {
       songs: {
         include: {
-          uploader: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          uploader: { select: { id: true, name: true } },
         },
       },
       playlists: {
         include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          user: { select: { id: true, name: true } },
           playlist_songs: {
             include: {
               song: {
                 include: {
-                  uploader: {
-                    select: {
-                      id: true,
-                      name: true,
-                    },
-                  },
+                  uploader: { select: { id: true, name: true } },
                 },
               },
             },
@@ -63,19 +48,13 @@ export async function GET(
         include: {
           song: {
             include: {
-              uploader: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
+              uploader: { select: { id: true, name: true } },
             },
           },
         },
       },
     },
   });
-
 
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -89,6 +68,8 @@ export async function GET(
     likesongs: user.likesongs,
     listeningHistories: user.listeningHistories,
   });
+
+  
 }
 
 export async function POST(
@@ -129,6 +110,32 @@ export async function POST(
       },
     });
   } catch (err) {
+    console.error("Update user failed:", err);
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user?.id !== params.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    const { name,  image,  } = body;
+
+    // อัปเดต user
+    const updatedUser = await prisma.user.update({
+      where: { id: params.id },
+      data: {
+        name,
+        image,
+      },
+    });
+
+    return NextResponse.json({ user: updatedUser });
+  } catch (err: any) {
     console.error("Update user failed:", err);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }

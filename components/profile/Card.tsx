@@ -1,32 +1,55 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Check, X } from "lucide-react";
+import { useSignedImage } from "@/lib/hooks/useSignedImage";
 
-
-
-export default function Card({ userId }: { userId: string }) {
+export default function Card({
+  userId,
+  initialBg,
+}: {
+  userId: string;
+  initialBg?: string;
+}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [bgImage, setBgImage] = useState("/1.jpg");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [bgKey, setBgKey] = useState(initialBg || "");
+  const [loading, setLoading] = useState(true);
 
-  const handleClick = () => {
-    fileInputRef.current?.click();
-  };
+  const signedUrl = useSignedImage(bgKey);
+  const isBlobUrl = bgKey?.startsWith("blob:");
+  const displayUrl = previewImage || (isBlobUrl ? bgKey : signedUrl);
+
+  if(!userId){
+    
+  }
+
+  // รอ signed URL โหลดเสร็จ
+  useEffect(() => {
+    if (!isBlobUrl && signedUrl) {
+      setLoading(false);
+    } else if (isBlobUrl) {
+      setLoading(false); // blob พร้อมแสดงทันที
+    } else {
+      setLoading(true);
+    }
+  }, [signedUrl, isBlobUrl]);
+
+  const handleClick = () => fileInputRef.current?.click();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const previewUrl = URL.createObjectURL(file);
     setPreviewImage(previewUrl);
+    setLoading(false); // preview พร้อมแสดงทันที
   };
 
   const handleConfirm = async () => {
-    if (!previewImage) return;
-    const file = fileInputRef.current?.files?.[0];
-    if (!file) return;
+    if (!userId || !fileInputRef.current?.files?.[0]) return;
 
+    const file = fileInputRef.current.files[0];
     try {
       setUploading(true);
       const formData = new FormData();
@@ -38,8 +61,9 @@ export default function Card({ userId }: { userId: string }) {
       });
       const data = await res.json();
       if (data.url) {
-        setBgImage(data.url);
+        setBgKey(data.url);
         setPreviewImage(null);
+        setLoading(true); // รอ signed URL ใหม่
       }
     } catch (err) {
       console.error("Upload failed:", err);
@@ -51,17 +75,29 @@ export default function Card({ userId }: { userId: string }) {
   const handleCancel = () => {
     setPreviewImage(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    setLoading(false);
   };
 
   return (
-    <div className="relative w-full h-72 bg-gray-300 overflow-hidden group">
-      <img
-        src={previewImage || bgImage}
-        alt="Profile Banner"
-        className="w-full h-full object-cover"
-      />
+    <div className="relative w-full h-72 overflow-hidden group ">
+      {/* Loader / Placeholder */}
+      {loading && (
+        <div className="w-full h-full flex items-center justify-center bg-black/80 animate-pulse">
+          
+        </div>
+      )}
 
-      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      {/* รูปภาพ */}
+      {!loading && displayUrl && (
+        <img
+          src={displayUrl}
+          alt="Profile Banner"
+          className="w-full h-full object-cover transition-opacity duration-300"
+        />
+      )}
+
+      {/* Overlay ตอน hover */}
+      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"></div>
 
       <input
         type="file"
@@ -73,7 +109,7 @@ export default function Card({ userId }: { userId: string }) {
 
       {/* ปุ่มตรงมุมขวาล่าง */}
       <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-        {!previewImage && (
+        {!previewImage &&  (
           <button
             onClick={handleClick}
             className="bg-white/80 text-black px-4 py-2 rounded-full text-sm font-semibold shadow hover:bg-white duration-300"
@@ -87,15 +123,16 @@ export default function Card({ userId }: { userId: string }) {
             <button
               onClick={handleCancel}
               disabled={uploading}
-              className="bg-red-500 text-white cursor-pointer px-4 py-2 rounded-full hover:bg-red-600 transition"
+              className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition"
             >
-              <X/>
+              <X />
             </button>
             <button
               onClick={handleConfirm}
               disabled={uploading}
-             className="bg-white/80 text-black px-4 py-2 rounded-full text-sm cursor-pointer font-semibold shadow hover:bg-white duration-300">
-              {uploading ? "Uploading..." : <Check/>}
+              className="bg-white/80 text-black px-4 py-2 rounded-full text-sm font-semibold shadow hover:bg-white duration-300"
+            >
+              {uploading ? "Uploading..." : <Check />}
             </button>
           </>
         )}

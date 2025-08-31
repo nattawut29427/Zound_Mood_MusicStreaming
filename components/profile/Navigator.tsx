@@ -120,7 +120,7 @@ export default function Navigator({ userId }: NavigatorProps) {
             >
               <div
                 key={song.id}
-                className="flex items-center cursor-pointer hover:bg-indigo-800 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
+                className="flex items-center cursor-pointer hover:bg-neutral-950 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
               >
                 <Mdpic
                   picture={song.picture || "/fallback.jpg"}
