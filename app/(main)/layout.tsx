@@ -45,7 +45,7 @@ export default function RootLayout({
       <SessionWrapper>
         <FileProvider>
           <PlayerProvider>
-            <Header />
+             <Header />
             <SidebarProvider>
               <PathWatcher />
               <div className="flex flex-col md:flex-row p-4 gap-4 h-auto md:h-[calc(100vh-5rem)]">

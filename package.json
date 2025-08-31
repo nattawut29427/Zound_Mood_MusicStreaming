@@ -57,6 +57,7 @@
     "react-easy-crop": "^5.5.0",
     "react-hotkeys-hook": "^5.1.0",
     "react-textarea-autosize": "^8.5.9",
+    "swr": "^2.3.6",
     "tailwind-merge": "^3.3.0",
     "truncate-html": "^1.2.2",
     "uploadthing": "^7.7.3",

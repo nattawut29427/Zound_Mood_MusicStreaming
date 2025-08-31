@@ -15,12 +15,22 @@ export default async function ProfilePage({ params }: { params: { slug: string }
       id: true,
       name: true,
       image: true,
+      email: true,  
+      bg_image: true,
     },
   });
 
   if (!user) return notFound();
 
-  // เช็คว่าผู้ใช้ปัจจุบัน follow user นี้หรือไม่
+  const safeUser = {
+  ...user,
+  name: user.name || "",
+  email: user.email || "",
+  image: user.image || "",
+  bg_image: user.bg_image || "",
+};
+
+  // เช็คว่าผู้ใช้ปัจจุบัน follow user นี้
   const session = await getServerSession(authOptions);
   let isFollowing = false;
   if (session?.user?.id) {
@@ -35,5 +45,5 @@ export default async function ProfilePage({ params }: { params: { slug: string }
     isFollowing = !!follow;
   }
 
-  return <ProfileClient user={{ ...user, isFollowing }} />;
+  return <ProfileClient user={{ ...safeUser, isFollowing,  }} />;
 }
