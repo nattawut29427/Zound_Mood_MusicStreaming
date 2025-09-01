@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Share2, Play } from "lucide-react";
+import { Share2, Play, Heart } from "lucide-react";
 import PlaylistCover from "@/components/PlaylistCover";
 import Likebutton from "@/components/Likebutton";
 import AddToPlaylistButton from "@/components/Plus";
@@ -125,7 +125,7 @@ export default function SongDetailClient({
             <p className="text-white font-semibold">{formatCount(playCount)}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Play className="h-5 w-5 text-neutral-600" />
+            <Heart className="h-5 w-5 text-neutral-600" />
             <p className="text-white font-semibold">{formatCount(likeCount)}</p>
           </div>
         </div>

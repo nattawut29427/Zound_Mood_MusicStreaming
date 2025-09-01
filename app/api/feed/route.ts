@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
   try {
     let sections: any[] = [];
 
-    // 🎧 Followed
+    //  Followed
     if (session?.user?.id) {
       const followedUsers = await prisma.follow.findMany({
         where: { following_user_id: session.user.id },
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 🏷️ Tags
+    //  Tags
     if (session?.user?.id) {
       const [likedSongs, historySongs] = await Promise.all([
         prisma.likeSong.findMany({
@@ -146,7 +146,7 @@ console.log("Pool after filterUniqueBySection:", pool.map(s => ({ id: s.id, name
       
     }
 
-    // 🔥 Trending
+    //  Trending
     let allSongs = await prisma.song.findMany({
       include: { stat: true, uploader: true, song_tags: { include: { tag: true } } },
     });
@@ -171,7 +171,7 @@ console.log("Pool after filterUniqueBySection:", pool.map(s => ({ id: s.id, name
 
     if (trending.length) sections.push({
       id: "sys-trending",
-      title: "🔥 Trending",
+      title: "Trending",
       feed_items: trending.map((s, i) => ({ id: s.id, order_index: i, song: s })),
     });
 
@@ -260,7 +260,7 @@ Select songs that are similar in style or mood to the songs they've recently lis
       }
     }
 
-    // 📂 DB Sections
+    //  DB Sections
     const dbSections = await prisma.feedSection.findMany({
       include: { feed_items: { include: { song: { include: { uploader: true, stat: true } } } } },
     });

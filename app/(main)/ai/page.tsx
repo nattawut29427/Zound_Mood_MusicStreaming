@@ -76,7 +76,7 @@ const AIGenPage = () => {
 
        
 
-      {/* กล่อง input ที่อยู่ล่างสุดเหมือน ChatGPT */}
+      {/* กล่อง input ที่อยู่ล่างสุด*/}
       <div className=" p-4  mb-20">
         <div className="flex items-center w-full  bg-white border border-gray-300 rounded-full focus-within:ring-2 focus-within:ring-violet-700 focus-within:border-transparent transition-shadow">
           <input

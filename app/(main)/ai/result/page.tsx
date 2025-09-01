@@ -40,7 +40,7 @@ function handleImageUpload(file: File) {
     setSelectedImageFile(file);
     const previewUrl = URL.createObjectURL(file);
     setPictureUrl(previewUrl);
-    setSaveMessage("📸 เลือกรูปใหม่แล้ว (ยังไม่อัปโหลด)");
+    setSaveMessage("เลือกรูปใหม่แล้ว (ยังไม่อัปโหลด)");
   }
 }
 
@@ -87,7 +87,7 @@ function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
       }
 
       alert("Playlist saved successfully!");
-      setSaveMessage("✅ Playlist ถูกบันทึกแล้ว");
+      setSaveMessage("Playlist ถูกบันทึกแล้ว");
     } catch (err: any) {
       setError("❌ " + err.message);
     }
@@ -118,7 +118,7 @@ function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
           {reason && (
             <div className="mt-4 bg-neutral-800 p-4 rounded-md">
               <h3 className="text-sm font-semibold mb-1 text-gray-300">
-                🧠 เหตุผล:
+                เหตุผล:
               </h3>
               <p className="text-gray-400 whitespace-pre-wrap">{reason}</p>
             </div>
@@ -175,7 +175,7 @@ function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
             onClick={handleSavePlaylist}
             className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
           >
-            💾 Save Playlist
+             Save Playlist
           </button>
 
           {saveMessage && <p className="mt-4 text-green-500 font-medium">{saveMessage}</p>}

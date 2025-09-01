@@ -11,7 +11,7 @@ export default async function SongDetailPage({ params }: { params: { id: string 
     return <div className="text-white">Unauthorized</div>;
   }
 
-  // ✅ ดึงข้อมูล song + uploader ในครั้งเดียว
+  //  ดึงข้อมูล song + uploader ในครั้งเดียว
   const song = await prisma.song.findUnique({
     where: { id: songId },
     include: { uploader: true, song_tags: true },
@@ -23,7 +23,7 @@ export default async function SongDetailPage({ params }: { params: { id: string 
 
   const uploaderId = song.uploader.id
 
-  // ✅ ใช้ uploaderId ที่ได้จาก song ไป query ต่อ
+  //  ใช้ uploaderId ที่ได้จาก song ไป query ต่อ
   const [likedRecord, songStat, likeCount, followerCount, isFollowing] = await Promise.all([
     prisma.likeSong.findUnique({
       where: { user_id_song_id: { user_id: session.user.id, song_id: songId } },
