@@ -13,6 +13,7 @@ import Picdiary from "../cover_pic/Picdiary";
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useSignedImage } from "@/lib/hooks/useSignedImage";
 
 export function DiaryModal({
   open,
@@ -28,6 +29,9 @@ export function DiaryModal({
   const { data: session } = useSession();
   const [likes, setLikes] = useState(0);
   const [views, setViews] = useState(0);
+
+
+  const urlImage = useSignedImage(session?.user.image || "")
 
   useEffect(() => {
     if (!session?.user) return;
@@ -91,7 +95,7 @@ export function DiaryModal({
             <DialogTitle> </DialogTitle>
             <DialogHeader>
               <div className="flex items-center gap-2 ">
-                <img src={diary.user?.image || ""} alt="" className="rounded-full h-10   w-10"/>
+                <img src={urlImage || "noImage"} alt="" className="rounded-full h-10   w-10" />
                 <p className="font-bold">{diary.user?.name}</p>
               </div>
               <DialogDescription>
@@ -125,11 +129,10 @@ export function DiaryModal({
             className={`absolute z-10 right-4 top-3
     shadow-md rounded-full px-4 py-2 text-sm font-semibold
     transition-colors duration-300 cursor-pointer border
-    ${
-      liked
-        ? "text-red-500 border-red-500 bg-red-50"
-        : "text-gray-600 border-gray-300 bg-white hover:bg-gray-100"
-    }
+    ${liked
+                ? "text-red-500 border-red-500 bg-red-50"
+                : "text-gray-600 border-gray-300 bg-white hover:bg-gray-100"
+              }
     ${loading ? "opacity-50 pointer-events-none" : ""}
   `}
           >

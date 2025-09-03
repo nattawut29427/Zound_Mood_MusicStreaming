@@ -11,6 +11,8 @@ import parse from "html-react-parser";
 import { useRef } from "react";
 import { usePlayer } from "@/app/context/Playercontext";
 import { DiaryModal } from "@/components/Diarymodal/Modal";
+import { useSession } from "next-auth/react";
+import { useSignedImage } from "@/lib/hooks/useSignedImage";
 
 function DiaryCard({
   diary,
@@ -25,6 +27,11 @@ function DiaryCard({
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const MAX_HEIGHT = 512;
+  const { data: session, status } = useSession();
+
+  const urlImage = useSignedImage(session?.user.image || "")
+
+
 
   useEffect(() => {
     const el = contentRef.current;
@@ -45,7 +52,7 @@ function DiaryCard({
         <div className="flex items-center space-x-2">
           <img
             className="rounded-full w-8 h-8 object-cover"
-            src={diary.user?.image || ""}
+            src={urlImage || "noimage"}
             alt={diary.user?.name || "User"}
           />
           <span className="text-sm font-medium">{diary.user?.name}</span>

@@ -58,8 +58,6 @@
       }
     }, [picture]);
 
-    console.log("SongCover received songId:", songId)
-
     return (
       <div className="relative w-48 h-48 group">
         {!picture ? (

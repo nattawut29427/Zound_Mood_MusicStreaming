@@ -350,12 +350,12 @@ export default function Sidebar2() {
           <div className="h-72 w-full mt-5 overflow-auto">
             <Card />
           </div>
-          <div className="text-3xl mt-5 font-bold">
+          {/* <div className="text-3xl mt-5 font-bold">
             For you
             <div>
               <p>เเนะนำเเนวเพลงที่ฟังบ่อย</p>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </aside>
