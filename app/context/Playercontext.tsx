@@ -23,6 +23,8 @@ type PlayerContextType = {
   isLooping: boolean;
   queue: Song[];
   queueIndex: number;
+  isAutoContinue: boolean;
+  toggleAutoContinue: () => void;
   playNext: () => void;
   playPrevious: () => void;
   playSong: (song: Song, queue?: Song[]) => void;
@@ -51,6 +53,8 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
+  const [isAutoContinue, setIsAutoContinue] = useState(true);
+
 
   const pathname = usePathname();
 
@@ -77,16 +81,16 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logSongPlay = async (songId: number) => {
-  try {
-    await fetch("/api/playsong", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ songId, action: "view" }),
-    });
-  } catch (err) {
-    console.error("Song play log failed:", err);
-  }
-};
+    try {
+      await fetch("/api/playsong", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ songId, action: "view" }),
+      });
+    } catch (err) {
+      console.error("Song play log failed:", err);
+    }
+  };
 
   const playDiary = (diary: Diary) => {
     if (!diary.song) return;
@@ -156,35 +160,70 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!playingUrl || !currentTrack) return;
 
+    // ref เอาไว้ track sound ปัจจุบัน
+    const activeSoundRef = { current: true };
+
     if (sound) {
       sound.stop();
       sound.unload();
+      setSound(null);
     }
 
     const newSound = new Howl({
       src: [playingUrl],
       html5: true,
       volume,
+      loop: isLooping,
+      onload: () => {
+        if (!activeSoundRef.current) return; // ถ้าโดนยกเลิกแล้วไม่เล่น
+        newSound.play();
+      },
       onplay: () => {
+        if (!activeSoundRef.current) return;
         setIsPlaying(true);
         setDuration(newSound.duration());
         logSongPlay(currentTrack.id);
       },
-      onend: () => {
-        if (!isLooping) {
-          setIsPlaying(false);
+      onend: async () => {
+        setIsPlaying(false);
+
+        if (isLooping) {
+          return; // loop จัดการโดย Howler 
+        }
+
+        if (queue.length > 0) {
           playNext();
+        } else if (isAutoContinue && currentTrack) {
+          try {
+            const res = await fetch(`/api/recommend?songId=${currentTrack.id}`);
+            if (!res.ok) {
+              setIsPlaying(false);
+              return;
+            }
+            const nextSong = await res.json();
+            if (nextSong?.id && nextSong.id !== currentTrack.id) {
+              playSong(nextSong);
+            } else {
+              setIsPlaying(false);
+            }
+          } catch (err) {
+            console.error("Auto continue failed:", err);
+            setIsPlaying(false);
+          }
+        } else {
+          setIsPlaying(false);
         }
       },
     });
 
-    newSound.play();
     setSound(newSound);
 
     return () => {
+      // เมื่อ unmount หรือเปลี่ยนเพลง ให้ mark ว่า sound เก่านี้หมดอายุ
+      activeSoundRef.current = false;
       newSound.unload();
     };
-  }, [playingUrl, currentTrack?.id]);
+  }, [playingUrl, currentTrack?.id, isLooping]);
 
   const playSong = (song: Song) => {
     setCurrentDiaryAudioUrl(null);
@@ -246,6 +285,10 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const toggleAutoContinue = () => {
+    setIsAutoContinue((prev) => !prev);
+  };
+
   //controll play/puses with spacebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -269,7 +312,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPlaying]);
 
-  
+
 
   return (
     <PlayerContext.Provider
@@ -281,6 +324,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         position,
         duration,
         isLooping,
+        isAutoContinue,
         playSong,
         playDiary,
         queue,
@@ -291,6 +335,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         seek,
         setVolume,
         toggleLoop,
+        toggleAutoContinue,
         playNext,
         playPrevious,
         setQueue: (songs) => setQueue(songs),

@@ -118,14 +118,14 @@ export async function GET(req: NextRequest) {
       historySongs.forEach(h => h.song.song_tags.forEach(st => favTags.add(st.tag.name_tag)));
       const topTags = Array.from(favTags).slice(0, 5);
 
-      
+
       if (topTags.length) {
         let pool = await prisma.song.findMany({
           where: { song_tags: { some: { tag: { name_tag: { in: topTags } } } } },
           include: { uploader: true, stat: true, song_tags: { include: { tag: true } } },
         });
         console.log("Pool before filter:", pool.map(s => ({ id: s.id, name: s.name_song })));
-        
+
 
         const sectionSeen = new Set<number>();
         pool = filterUniqueBySection(pool, sectionSeen);
@@ -135,16 +135,21 @@ export async function GET(req: NextRequest) {
           title: "Based on Your Tags",
           description: "Recommended songs from your favorite tags",
           feed_items: pool.map((s, i) => ({ id: s.id, order_index: i, song: s })),
+
         });
 
         pool = filterUniqueBySection(pool, sectionSeen);
-console.log("Pool after filterUniqueBySection:", pool.map(s => ({ id: s.id, name: s.name_song })));
+        
+        console.log("Pool after filterUniqueBySection:", pool.map(s => ({ id: s.id, name: s.name_song })));
+
 
       }
 
       console.log("Top tags for user:", topTags);
-      
+
+
     }
+
 
     //  Trending
     let allSongs = await prisma.song.findMany({
@@ -226,39 +231,39 @@ console.log("Pool after filterUniqueBySection:", pool.map(s => ({ id: s.id, name
       }
     }
 
-    //  AI Picks
-    if (session?.user?.id) {
-      const history = await prisma.listeningHistory.findMany({
-        where: { user_id: session.user.id },
-        orderBy: { listened_at: "desc" },
-        take: 20,
-        include: { song: { include: { song_tags: { include: { tag: true } }, uploader: true, stat: true } } },
-      });
+//     //  AI Picks
+//     if (session?.user?.id) {
+//       const history = await prisma.listeningHistory.findMany({
+//         where: { user_id: session.user.id },
+//         orderBy: { listened_at: "desc" },
+//         take: 20,
+//         include: { song: { include: { song_tags: { include: { tag: true } }, uploader: true, stat: true } } },
+//       });
 
-      const favTags = [...new Set(history.flatMap(h => h.song.song_tags.map(st => st.tag.name_tag)))];
+//       const favTags = [...new Set(history.flatMap(h => h.song.song_tags.map(st => st.tag.name_tag)))];
 
-      if (favTags.length) {
-        const pool = await prisma.song.findMany({
-          where: { song_tags: { some: { tag: { name_tag: { in: favTags } } } } },
-          include: { uploader: true, stat: true, song_tags: { include: { tag: true } } },
-        });
+//       if (favTags.length) {
+//         const pool = await prisma.song.findMany({
+//           where: { song_tags: { some: { tag: { name_tag: { in: favTags } } } } },
+//           include: { uploader: true, stat: true, song_tags: { include: { tag: true } } },
+//         });
 
-        const autoPrompt = `Generate a personalized feed for user ${session.user.id} based on their listening history and favorite tags. 
-Select songs that are similar in style or mood to the songs they've recently listened to.`;
+//         const autoPrompt = `Generate a personalized feed for user ${session.user.id} based on their listening history and favorite tags. 
+// Select songs that are similar in style or mood to the songs they've recently listened to.`;
 
-        const aiResult = await generateAIPlaylist(autoPrompt, pool);
+//         const aiResult = await generateAIPlaylist(autoPrompt, pool);
 
-        const aiSongs = pool.filter((s) => aiResult.playlist.map(String).includes(String(s.id)));
-        if (aiSongs.length) {
-          sections.push({
-            id: "sys-ai",
-            title: "🤖 AI Picks",
-            description: aiResult.reason,
-            feed_items: aiSongs.map((s, i) => ({ id: s.id, order_index: i, song: s })),
-          });
-        }
-      }
-    }
+//         const aiSongs = pool.filter((s) => aiResult.playlist.map(String).includes(String(s.id)));
+//         if (aiSongs.length) {
+//           sections.push({
+//             id: "sys-ai",
+//             title: "🤖 AI Picks",
+//             description: aiResult.reason,
+//             feed_items: aiSongs.map((s, i) => ({ id: s.id, order_index: i, song: s })),
+//           });
+//         }
+//       }
+//     }
 
     //  DB Sections
     const dbSections = await prisma.feedSection.findMany({
