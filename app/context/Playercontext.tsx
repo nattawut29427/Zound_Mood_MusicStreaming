@@ -8,8 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { Howl } from "howler";
-import { Song } from "@/components/types";
-import { Diary } from "@/components/types";
+import { Song, Diary, ShortSong } from "@/components/types";
 import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 import { useCachedDiary } from "@/lib/hooks/useCacheddiary";
 import { usePathname } from "next/navigation";
@@ -37,13 +36,12 @@ type PlayerContextType = {
   setQueue: (songs: Song[]) => void;
   playQueue: (songs: Song[], startIndex: number) => void;
   playDiary: (diary: Diary) => void;
+  playShortSong: (shortSong: ShortSong, audioUrl: string) => void;
 };
 
 export const PlayerContext = createContext<PlayerContextType>(
   {} as PlayerContextType
 );
-
-
 
 export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [currentTrack, setCurrentTrack] = useState<Song | null>(null);
@@ -55,30 +53,18 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [isLooping, setIsLooping] = useState(false);
   const [isAutoContinue, setIsAutoContinue] = useState(true);
 
+  const [queue, setQueue] = useState<Song[]>([]);
+  const [queueIndex, setQueueIndex] = useState<number>(0);
+  const [currentDiaryAudioUrl, setCurrentDiaryAudioUrl] = useState<string | null>(null);
+
+  // ShortSong
+  const [isShortSongPlaying, setIsShortSongPlaying] = useState(false);
 
   const pathname = usePathname();
 
-  const [queue, setQueue] = useState<Song[]>([]);
-  const [queueIndex, setQueueIndex] = useState<number>(0);
-  const [currentDiaryAudioUrl, setCurrentDiaryAudioUrl] = useState<
-    string | null
-  >(null);
-
-  const shouldLog = !!currentTrack; // หรือ logic ที่แม่นยำกว่านี้ตามต้องการ
-
-  const signedUrl = useCachedSignedUrl(currentTrack?.audio_url, shouldLog);
+  const signedUrl = useCachedSignedUrl(currentTrack?.audio_url, !!currentTrack);
   const signedUrlDiary = useCachedDiary(currentDiaryAudioUrl ?? undefined);
-
   const playingUrl = currentDiaryAudioUrl ? signedUrlDiary : signedUrl;
-
-
-  const playQueue = (songs: Song[], startIndex: number) => {
-    if (songs.length === 0) return;
-
-    setQueue(songs);
-    setQueueIndex(startIndex);
-    setCurrentTrack(songs[startIndex]);
-  };
 
   const logSongPlay = async (songId: number) => {
     try {
@@ -92,14 +78,56 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // -------------------------------
+  // Play ShortSong
+  // -------------------------------
+  const playShortSong = (shortSong: ShortSong, audioUrl: string) => {
+    if (!audioUrl) return;
+
+    const song: Song = {
+      id: shortSong.song.id,
+      name_song: shortSong.song.name_song,
+      audio_url: audioUrl,
+      picture: shortSong.song.picture,
+      uploaded_by: shortSong.song.artist,
+    };
+
+    // หยุดเพลงหลัก
+    if (sound) {
+      sound.stop();
+      sound.unload();
+      setSound(null);
+    }
+
+    setIsShortSongPlaying(true);
+
+    const shortSound = new Howl({
+      src: [audioUrl],
+      html5: true,
+      volume,
+      onplay: () => setIsPlaying(true),
+      onend: () => {
+        setIsPlaying(false);
+        setIsShortSongPlaying(false);
+        shortSound.unload();
+        setSound(null);
+        setCurrentTrack(null); // ไม่ restore เพลงเก่า
+      },
+    });
+
+    shortSound.play();
+    setCurrentTrack(song);
+    setSound(shortSound);
+  };
+
+  // -------------------------------
+  // Play Diary
+  // -------------------------------
   const playDiary = (diary: Diary) => {
     if (!diary.song) return;
 
     const isFromDiaryPage = pathname.startsWith("/you/diary");
-
-    const audioUrl = isFromDiaryPage
-      ? diary.trimmed_audio_url || diary.song.audio_url
-      : diary.song.audio_url;
+    const audioUrl = isFromDiaryPage ? diary.trimmed_audio_url || diary.song.audio_url : diary.song.audio_url;
 
     const song: Song = {
       id: diary.song.id,
@@ -109,36 +137,70 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
       uploaded_by: diary.song.uploaded_by,
     };
 
-    if (currentTrack?.id === song.id) {
-      sound?.stop();
-      setCurrentTrack(null);
-      setCurrentDiaryAudioUrl(null);
-      setTimeout(() => {
-        setCurrentTrack(song);
-        setCurrentDiaryAudioUrl(audioUrl);
-      }, 0);
-      return;
-    }
-
     setCurrentTrack(song);
     setCurrentDiaryAudioUrl(audioUrl);
   };
 
+  // -------------------------------
+  // Play main Song
+  // -------------------------------
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (sound && isPlaying) {
-        setPosition(sound.seek() as number);
-      }
-    }, 500);
-    return () => clearInterval(interval);
-  }, [sound, isPlaying]);
+    if (!playingUrl || !currentTrack || isShortSongPlaying) return;
+
+    if (sound) {
+      sound.stop();
+      sound.unload();
+      setSound(null);
+    }
+
+    const newSound = new Howl({
+      src: [playingUrl],
+      html5: true,
+      volume,
+      loop: isLooping,
+      onplay: () => {
+        setIsPlaying(true);
+        setDuration(newSound.duration());
+        logSongPlay(currentTrack.id);
+      },
+      onend: async () => {
+        setIsPlaying(false);
+        if (isLooping) return;
+
+        if (queue.length > 0) playNext();
+        else if (isAutoContinue && currentTrack) {
+          try {
+            const res = await fetch(`/api/recommend?songId=${currentTrack.id}`);
+            if (!res.ok) return;
+            const nextSong = await res.json();
+            if (nextSong?.id && nextSong.id !== currentTrack.id) playSong(nextSong);
+          } catch (err) {
+            console.error("Auto continue failed:", err);
+          }
+        }
+      },
+    });
+
+    newSound.play();
+    setSound(newSound);
+
+    return () => {
+      newSound.stop();
+      newSound.unload();
+    };
+  }, [playingUrl, currentTrack?.id, isLooping, isShortSongPlaying]);
+
+  // -------------------------------
+  // Queue
+  // -------------------------------
+  const playQueue = (songs: Song[], startIndex: number) => {
+    if (!songs.length) return;
+    setQueue(songs);
+    setQueueIndex(startIndex);
+    setCurrentTrack(songs[startIndex]);
+  };
 
   const playNext = () => {
-    console.log(" Queue length:", queue.length);
-    console.log(
-      "Queue songs:",
-      queue.map((s, i) => `${i + 1}. ${s.name_song}`)
-    );
     setQueueIndex((prevIndex) => {
       const nextIndex = prevIndex + 1;
       if (nextIndex < queue.length) {
@@ -156,86 +218,9 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // เล่นเพลงเมื่อ signedUrl เปลี่ยน (ได้ URL ที่แคชแล้ว)
-  useEffect(() => {
-    if (!playingUrl || !currentTrack) return;
-
-    // ref เอาไว้ track sound ปัจจุบัน
-    const activeSoundRef = { current: true };
-
-    if (sound) {
-      sound.stop();
-      sound.unload();
-      setSound(null);
-    }
-
-    const newSound = new Howl({
-      src: [playingUrl],
-      html5: true,
-      volume,
-      loop: isLooping,
-      onload: () => {
-        if (!activeSoundRef.current) return; // ถ้าโดนยกเลิกแล้วไม่เล่น
-        newSound.play();
-      },
-      onplay: () => {
-        if (!activeSoundRef.current) return;
-        setIsPlaying(true);
-        setDuration(newSound.duration());
-        logSongPlay(currentTrack.id);
-      },
-      onend: async () => {
-        setIsPlaying(false);
-
-        if (isLooping) {
-          return; // loop จัดการโดย Howler 
-        }
-
-        if (queue.length > 0) {
-          playNext();
-        } else if (isAutoContinue && currentTrack) {
-          try {
-            const res = await fetch(`/api/recommend?songId=${currentTrack.id}`);
-            if (!res.ok) {
-              setIsPlaying(false);
-              return;
-            }
-            const nextSong = await res.json();
-            if (nextSong?.id && nextSong.id !== currentTrack.id) {
-              playSong(nextSong);
-            } else {
-              setIsPlaying(false);
-            }
-          } catch (err) {
-            console.error("Auto continue failed:", err);
-            setIsPlaying(false);
-          }
-        } else {
-          setIsPlaying(false);
-        }
-      },
-    });
-
-    setSound(newSound);
-
-    return () => {
-      // เมื่อ unmount หรือเปลี่ยนเพลง ให้ mark ว่า sound เก่านี้หมดอายุ
-      activeSoundRef.current = false;
-      newSound.unload();
-    };
-  }, [playingUrl, currentTrack?.id, isLooping]);
-
   const playSong = (song: Song) => {
     setCurrentDiaryAudioUrl(null);
     setCurrentTrack(song);
-
-    if (currentTrack?.id === song.id) {
-      sound?.stop();
-      setCurrentTrack(null);
-      setTimeout(() => setCurrentTrack(song), 0);
-    } else {
-      setCurrentTrack(song);
-    }
   };
 
   const pause = () => {
@@ -249,6 +234,8 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     if (sound) {
       sound.stop();
       setIsPlaying(false);
+      setIsShortSongPlaying(false);
+      setCurrentTrack(null);
     }
   };
 
@@ -259,37 +246,14 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const toggleLoop = () => {
-    setIsLooping((prev) => !prev);
-  };
+  const toggleLoop = () => setIsLooping((prev) => !prev);
+  useEffect(() => { if (sound) sound.loop(isLooping); }, [isLooping, sound]);
 
-  // ตั้งค่า loop ให้ sound ทุกครั้งที่ isLooping หรือ sound เปลี่ยน
-  useEffect(() => {
-    if (sound) {
-      sound.loop(isLooping);
-    }
-  }, [isLooping, sound]);
+  const seek = (pos: number) => { if (sound) { sound.seek(pos); setPosition(pos); } };
+  const setVolume = (vol: number) => { setVolumeState(vol); if (sound) sound.volume(vol); };
+  const toggleAutoContinue = () => setIsAutoContinue((prev) => !prev);
 
-  const seek = (pos: number) => {
-    if (sound) {
-      sound.seek(pos);
-      setPosition(pos);
-    }
-  };
-
-  const setVolume = (vol: number) => {
-    setVolumeState(vol);
-    localStorage.setItem("volume", vol.toString());
-    if (sound) {
-      sound.volume(vol);
-    }
-  };
-
-  const toggleAutoContinue = () => {
-    setIsAutoContinue((prev) => !prev);
-  };
-
-  //controll play/puses with spacebar
+  // Control spacebar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName.toLowerCase();
@@ -300,45 +264,48 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
       if (e.code === "Space" && !isTyping) {
         e.preventDefault();
-        if (isPlaying) {
-          pause();
-        } else {
-          resume();
-        }
+        if (isPlaying) pause();
+        else resume();
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPlaying]);
 
-
+  // Update position
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (sound && isPlaying) setPosition(sound.seek() as number);
+    }, 500);
+    return () => clearInterval(interval);
+  }, [sound, isPlaying]);
 
   return (
     <PlayerContext.Provider
       value={{
-        playQueue,
         currentTrack,
         isPlaying,
         volume,
         position,
         duration,
         isLooping,
-        isAutoContinue,
-        playSong,
-        playDiary,
         queue,
         queueIndex,
+        isAutoContinue,
+        toggleAutoContinue,
+        playNext,
+        playPrevious,
+        playSong,
+        playDiary,
+        playQueue,
+        playShortSong,
         stop,
         pause,
         resume,
         seek,
         setVolume,
         toggleLoop,
-        toggleAutoContinue,
-        playNext,
-        playPrevious,
-        setQueue: (songs) => setQueue(songs),
+        setQueue,
       }}
     >
       {children}

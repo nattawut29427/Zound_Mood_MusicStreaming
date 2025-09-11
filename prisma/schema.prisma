@@ -31,6 +31,7 @@ model User {
   following  Follow[]       @relation("Following")
   diaries    Diary[]
   feeds      Feed[]
+  shortSongs ShortSong[]
   listeningHistories ListeningHistory[]
 }
 
@@ -85,6 +86,7 @@ model Song {
   likesongs  LikeSong[]
   feeds      Feed[]
   diary      Diary[]
+  shortSongs ShortSong[]
   feed_items FeedItem[]
   song_tags  SongTag[]
   listeningHistories ListeningHistory[]
@@ -186,12 +188,13 @@ model Diary {
   name_diary  String
   content     Json        // เป็น content (แบบ json)
   trimmed_audio_url  String
-  song_id     Int         
+  song_id     Int?       
+  song_removed Boolean   @default(false)     
   user_id     String
   is_private  Boolean     @default(false)
   created_at  DateTime    @default(now())
   
-  song        Song        @relation(fields: [song_id], references: [id])
+  song        Song?       @relation(fields: [song_id], references: [id]) 
   user        User        @relation(fields: [user_id], references: [id])
   diary_feeds DiaryFeed[]
   stat        DiaryStat?
@@ -248,4 +251,18 @@ model DiaryStat {
   like_count Int    @default(0)
 
   diary      Diary  @relation(fields: [diary_id], references: [id]) 
+}
+
+model ShortSong {
+  id           String   @id @default(cuid())
+  userId       String
+  songId       Int
+  trimmedR2Key String
+  start        Float
+  duration     Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  song Song @relation(fields: [songId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }

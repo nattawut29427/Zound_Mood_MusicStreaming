@@ -26,16 +26,27 @@ export interface Diary {
   user_id: string;
   is_private: boolean;
   created_at: Date;
+  song_removed: false;
   song?: Song | null; // Optional relation
   user?: Uploader | null; // Optional relation
 }
 
-
-// export interface Song {
-//   id: number;
-//   name_song: string;
-//   audio_url: string;
-//   picture: string | null;
-//   uploader: Uploader;
-// }
-
+export interface ShortSong {
+  id: number;
+  trimmedR2Key: string;
+  start: number;
+  duration: number;
+  createdAt: string;
+  _replay?: number;
+  user: {
+    id: string;
+    name: string;
+    image: string;
+  };
+  song: {
+    id: number;
+    name_song: string;  // ใช้ตรงกับ DB
+    artist: string;
+    picture: string;
+  };
+}
