@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
   const userId = session?.user?.id;
 
   try {
+    // ตรวจสอบ Song / Playlist / ShortSong
     const song = await prisma.song.findFirst({
       where: { OR: [{ picture: key }, { audio_url: key }] },
     });
@@ -26,10 +27,15 @@ export async function GET(req: NextRequest) {
       where: { pic_playlists: key },
     });
 
-    if (!song && !playlist) {
+    const shortSong = await prisma.shortSong.findFirst({
+      where: { trimmedR2Key: key },
+    });
+
+    if (!song && !playlist && !shortSong) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    // ถ้า log สำหรับเพลงเต็ม
     if (log && userId && song) {
       const existing = await prisma.listeningHistory.findFirst({
         where: {
@@ -47,7 +53,11 @@ export async function GET(req: NextRequest) {
     }
 
     let url: string;
-    if (key.startsWith("http")) {
+
+    if (shortSong) {
+      // สำหรับ short song
+      url = await generatePresignedGetUrl(shortSong.trimmedR2Key);
+    } else if (key.startsWith("http")) {
       url = key; // external URL
     } else {
       url = await generatePresignedGetUrl(key); // R2 key

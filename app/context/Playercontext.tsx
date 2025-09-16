@@ -218,10 +218,22 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const playSong = (song: Song) => {
+  const playSong = (song: Song, songs?: Song[]) => {
     setCurrentDiaryAudioUrl(null);
-    setCurrentTrack(song);
-  };
+
+    if (songs && songs.length > 0) {
+      // เล่นเพลงจาก playlist ใช้ queue ของ playlist
+      const index = songs.findIndex((s) => s.id === song.id);
+      setQueue(songs);
+      setQueueIndex(index >= 0 ? index : 0);
+      setCurrentTrack(song);
+    } else {
+      // เล่นเพลงเดี่ยว ๆ queue แค่เพลงเดียว
+      setQueue([song]);
+      setQueueIndex(0);
+      setCurrentTrack(song);
+    }
+  };;
 
   const pause = () => {
     if (sound) {

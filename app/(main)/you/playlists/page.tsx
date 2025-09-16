@@ -36,7 +36,7 @@ export default async function SongDetailPage() {
       {playlists.map((playlist) => (
           <Link key={playlist.id} href={`/you/playlists/${playlist.id}`}>
           <div className="rounded-lg cursor-pointer hover:opacity-80 transition p-2">
-            <SongCover
+            <PlaylistCover
               picture={playlist.pic_playlists ?? ""}
               name={playlist.name_playlist}
               
