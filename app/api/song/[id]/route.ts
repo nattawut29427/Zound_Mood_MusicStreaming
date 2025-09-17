@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { r2 } from "@/lib/r2";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
     const songId = Number(params.id);
@@ -31,4 +33,65 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         console.error(err);
         return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
     }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const songId = Number(id);
+
+    const song = await prisma.song.findUnique({ where: { id: songId } });
+    if (!song) {
+      return NextResponse.json({ error: "Song not found" }, { status: 404 });
+    }
+
+    // ลบความสัมพันธ์อื่น ๆ ของ Song
+    await prisma.$transaction([
+      prisma.songTag.deleteMany({ where: { song_id: songId } }),
+      prisma.playlistSong.deleteMany({ where: { song_id: songId } }),
+      prisma.likeSong.deleteMany({ where: { song_id: songId } }),
+      prisma.feed.deleteMany({ where: { song_id: songId } }),
+      prisma.feedItem.deleteMany({ where: { song_id: songId } }),
+      prisma.listeningHistory.deleteMany({ where: { song_id: songId } }),
+      prisma.songStat.deleteMany({ where: { song_id: songId } }),
+    ]);
+
+    // อัปเดต Diary ของผู้ใช้ที่เกี่ยวข้อง
+    await prisma.diary.updateMany({
+      where: { song_id: songId },
+      data: {
+        song_id: null,
+        song_removed: true,
+      },
+    });
+
+    // ลบ Song
+    await prisma.song.delete({ where: { id: songId } });
+
+    // ลบไฟล์จาก R2
+    if (song.picture) {
+      await r2.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME!,
+          Key: song.picture,
+        })
+      );
+    }
+    if (song.audio_url) {
+      await r2.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME!,
+          Key: song.audio_url,
+        })
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting song:", error);
+    return NextResponse.json({ error: "Failed to delete song" }, { status: 500 });
+  }
 }

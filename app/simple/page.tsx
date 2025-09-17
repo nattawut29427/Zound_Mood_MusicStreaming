@@ -1,5 +1,5 @@
-import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor"
+import { LoginForm } from "@/components/login-form"
 
 export default function Page() {
-  return <SimpleEditor />
+  return <div><LoginForm/></div>
 }

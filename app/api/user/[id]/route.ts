@@ -8,7 +8,7 @@ export async function GET(
   req: NextRequest,
   context: { params: { id: string } }
 ) {
-  const { id } =  await context.params; 
+  const { id } = await context.params;
 
   if (!id) {
     return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
@@ -18,8 +18,6 @@ export async function GET(
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  console.log("params:", context.params)
 
   const user = await prisma.user.findUnique({
     where: { id },
@@ -53,6 +51,16 @@ export async function GET(
           },
         },
       },
+      // include shortSongs 
+      shortSongs: {
+        include: {
+          song: {
+            include: {
+              uploader: { select: { id: true, name: true } },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -67,10 +75,12 @@ export async function GET(
     playlists: user.playlists,
     likesongs: user.likesongs,
     listeningHistories: user.listeningHistories,
+    shortSongs: user.shortSongs, // ✅ ส่ง shortSongs ออกมาด้วย
   });
-
-  
 }
+
+
+
 
 export async function POST(
   req: NextRequest,
@@ -88,7 +98,7 @@ export async function POST(
   }
 
   const body = await req.json();
-  const { name, image, bg_image } = body; 
+  const { name, image, bg_image } = body;
 
   try {
     const updatedUser = await prisma.user.update({
@@ -106,7 +116,7 @@ export async function POST(
         id: updatedUser.id,
         name: updatedUser.name,
         image: updatedUser.image,
-        bg:updatedUser.bg_image ?? null,
+        bg: updatedUser.bg_image ?? null,
       },
     });
   } catch (err) {
@@ -123,7 +133,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   try {
     const body = await req.json();
-    const { name,  image,  } = body;
+    const { name, image, } = body;
 
     // อัปเดต user
     const updatedUser = await prisma.user.update({

@@ -2,16 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Share2, Play, Heart } from "lucide-react";
+import { Share2, Play, Heart, Trash2 } from "lucide-react";
 import PlaylistCover from "@/components/PlaylistCover";
 import Likebutton from "@/components/Likebutton";
 import AddToPlaylistButton from "@/components/Plus";
 import EditSongButton from "@/components/button/Editsg";
+import DeleteSongButton from "@/components/button/Delsg";
 import FollowUserWrapper from "@/components/button/Bt";
 import SongDetailControls from "@/components/SongdetailControl";
 import { generateUserSlug } from "@/lib/slug";
 import { useSignedImage } from "@/lib/hooks/useSignedImage";
-
 
 type Props = {
   song: any;
@@ -33,7 +33,6 @@ export default function SongDetailClient({
   sessionUserId,
 }: Props) {
   const uploaderImage = useSignedImage(song.uploader?.image || "");
-
 
   function formatCount(count: number): string {
     if (count >= 1_000_000_000) return (count / 1_000_000_000).toFixed(1) + "b";
@@ -61,15 +60,18 @@ export default function SongDetailClient({
             </div>
             <div className="flex space-x-6 items-center">
               {song.uploader?.id === sessionUserId ? (
-                <EditSongButton
-                  song={{
-                    ...song,
-                    picture: song.picture ?? undefined,
-                    song_tags: song.song_tags.map((tag: any) => ({
-                      name_tag: tag.name_tag ?? "",
-                    })),
-                  }}
-                />
+                <>
+                  <EditSongButton
+                    song={{
+                      ...song,
+                      picture: song.picture ?? undefined,
+                      song_tags: song.song_tags.map((tag: any) => ({
+                        name_tag: tag.name_tag ?? "",
+                      })),
+                    }}
+                  />
+                    <DeleteSongButton songId={song.id} songName={song.name_song} />
+                </>
               ) : (
                 <>
                   <Likebutton songId={song.id} initialLiked={isLiked} />
