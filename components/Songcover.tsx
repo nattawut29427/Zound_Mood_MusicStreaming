@@ -70,7 +70,7 @@
             {signedUrl && !error && (
               <Image
                 src={signedUrl}
-                alt={name}
+                alt={name || "no image"}
                 fill
                 className={`object-cover rounded-md transition-opacity duration-300 ${
                   loading ? "opacity-0" : "opacity-100"

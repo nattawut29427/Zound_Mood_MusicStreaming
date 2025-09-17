@@ -131,31 +131,31 @@ export default function Player() {
       {/* ปุ่มควบคุมเพลง */}
 
       <div className="flex  items-center space-x-4 w-1/3 pr-4 ">
-        <Shuffle className="w-5 h-5 text-white hover:text-blue-500 cursor-pointer" />
+        <Shuffle className="w-5 h-5 text-white hover:text-violet-600  cursor-pointer" />
         <SkipBack
-          className="w-6 h-6 text-white hover:text-blue-500 cursor-pointer"
+          className="w-6 h-6 text-white hover:text-violet-600  cursor-pointer"
           onClick={playPrevious}
         />
         {isPlaying ? (
           <PauseCircle
             onClick={handlePlayPause}
-            className="w-9 h-9 text-blue-500 cursor-pointer transition-transform duration-200 scale-110"
+            className="w-9 h-9 text-violet-600 cursor-pointer transition-transform duration-200 scale-110"
           />
         ) : (
           <CirclePlay
             onClick={handlePlayPause}
-            className="w-9 h-9 text-white hover:text-blue-500 cursor-pointer"
+            className="w-9 h-9 text-white hover:text-violet-600  cursor-pointer"
           />
         )}
         <SkipForward
-          className="w-6 h-6 text-white hover:text-blue-500 cursor-pointer"
+          className="w-6 h-6 text-white hover:text-violet-600  cursor-pointer"
           onClick={playNext}
         />
         <Repeat
           onClick={toggleLoop}
           className={`w-5 h-5 cursor-pointer transition-colors ${
-            isLooping ? "text-blue-500" : "text-white"
-          } hover:text-blue-500`}
+            isLooping ? "text-violet-600 " : "text-white"
+          } hover:text-violet-600 `}
         />
       </div>
       <div className="flex items-center justify-end space-x-2 w-1/3 pr-4">

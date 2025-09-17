@@ -53,13 +53,12 @@ export default function PlaylistDetailControls({
     } else {
       // กรณีที่ 2: Playlist นี้ยังไม่ได้อยู่ในคิวของ Player
       // หรือมี Playlist/เพลงอื่นกำลังเล่น/หยุดอยู่
-      // --> เริ่มเล่น Playlist นี้ใหม่จากต้น
+      //  เริ่มเล่น Playlist นี้ใหม่จากต้น
       playQueue(songs, 0);
     }
   };
 
   // Logic สำหรับแสดงไอคอน Play/Pause
-  // จะแสดงไอคอน Pause ก็ต่อเมื่อ Playlist นี้ถูกโหลดและกำลังเล่นอยู่
   const showPauseIcon = isThisPlaylistLoadedInQueue && isPlaying;
 
   const handleShufflePlay = () => {

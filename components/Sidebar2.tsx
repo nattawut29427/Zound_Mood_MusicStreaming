@@ -8,6 +8,15 @@ import { uploadImageToR2 } from "@/lib/uploadImage";
 import { SimpleEditor } from "./tiptap-templates/simple/simple-editor";
 import Card from "@/components/RecentCard/Card";
 import Createplaylist from "./cover_pic/Createplaylist";
+import ShortSongModal from "@/components/Shortmodal/page";
+import { ShortSong } from "@/components/types";
+import ShortSongFeed from "./ShortFeed/page";
+
+
+interface ShortSongFeedProps {
+  shortsongs: ShortSong[];
+  onSongClick: (index: number) => void;
+}
 
 export default function Sidebar2() {
   const { view, selectedSong, setView, selectedPlaylist } = useSidebar();
@@ -29,6 +38,28 @@ export default function Sidebar2() {
   const [editPreviewUrl, setEditPreviewUrl] = useState<string>("");
   const [editError, setEditError] = useState("");
 
+
+
+
+  //  short song feed
+  const [shortSongs, setShortSongs] = useState<ShortSong[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [currentShortIndex, setCurrentShortIndex] = useState(0);
+
+  // โหลด short songs จาก feed
+  useEffect(() => {
+    const fetchShortSongsFromFeed = async () => {
+      try {
+        const res = await fetch("/api/feed/shortfeed");
+        if (!res.ok) throw new Error("Failed to load short song feed");
+        const data = await res.json();
+        setShortSongs(data.shortsongs || []);
+      } catch (err) {
+        console.error("Error fetching short song feed:", err);
+      }
+    };
+    fetchShortSongsFromFeed();
+  }, []);
   useEffect(() => {
     if (view === "editPlaylist" && selectedPlaylist) {
       setEditName(selectedPlaylist.name_playlist);
@@ -124,7 +155,7 @@ export default function Sidebar2() {
     }
   };
 
- 
+
   if (view === "createPlaylist") {
     return (
       <div className="w-80 p-4 space-y-4 bg-gradient-to-t from-black to-[#252525] duration-200 h-full flex flex-col">
@@ -342,6 +373,7 @@ export default function Sidebar2() {
     );
   }
 
+
   return (
     <aside className="w-78 p-4 bg-gradient-to-t from-black from-[10%] to-[#252525] shadow-xl flex flex-col justify-between">
       <div className="h-screen w-full">
@@ -350,12 +382,29 @@ export default function Sidebar2() {
           <div className="h-72 w-full mt-5 overflow-auto">
             <Card />
           </div>
-          {/* <div className="text-3xl mt-5 font-bold">
-            For you
-            <div>
-              <p>เเนะนำเเนวเพลงที่ฟังบ่อย</p>
-            </div>
-          </div> */}
+        </div>
+
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold text-white mb-2">Short Songs</h2>
+
+          {/* ใช้ ShortSongFeed แทน div map เดิม */}
+          <ShortSongFeed
+            shortsongs={shortSongs}
+            onSongClick={(index) => {
+              setCurrentShortIndex(index);  // modal รู้ว่ากดเพลงไหน
+              setModalOpen(true);           // เปิด modal
+            }}
+          />
+
+          {/* Modal ของ Short Songs */}
+          {modalOpen && currentShortIndex !== null && (
+            <ShortSongModal
+              open={modalOpen}
+              onClose={() => setModalOpen(false)}
+              shortsongs={shortSongs}
+              initialIndex={currentShortIndex}
+            />
+          )}
         </div>
       </div>
     </aside>
