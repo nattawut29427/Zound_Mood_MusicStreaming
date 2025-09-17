@@ -5,7 +5,8 @@ import { useGeneratedPlaylist } from "@/app/context/GeneratedPlaylistContext";
 import { Song } from "@/components/types";
 import Smallpic from "@/components/cover_pic/Smallpic";
 import { uploadImageToR2 } from "@/lib/uploadImage";
-import SongCover from "@/components/Songcover";
+import Createplaylist from "@/components/cover_pic/Createplaylist";
+import LoadingOverlay from "@/components/Loadingoveray/page"; // 👈 import
 
 const AIGenResultPage = () => {
   const {
@@ -21,6 +22,7 @@ const AIGenResultPage = () => {
   const [saveMessage, setSaveMessage] = useState("");
   const [error, setError] = useState("");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false); 
 
   useEffect(() => {
     async function fetchSongs() {
@@ -35,24 +37,16 @@ const AIGenResultPage = () => {
     .map((id) => songs.find((s) => s.id === Number(id)))
     .filter((s): s is Song => !!s);
 
-function handleImageUpload(file: File) {
-  if (file) {
-    setSelectedImageFile(file);
-    const previewUrl = URL.createObjectURL(file);
-    setPictureUrl(previewUrl);
-    setSaveMessage("เลือกรูปใหม่แล้ว (ยังไม่อัปโหลด)");
+  function handleImageUpload(file: File) {
+    if (file) {
+      setSelectedImageFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setPictureUrl(previewUrl);
+      setSaveMessage("เลือกรูปใหม่แล้ว (ยังไม่อัปโหลด)");
+    }
   }
-}
-
-function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-  const file = event.target.files?.[0];
-  if (file) {
-    handleImageUpload(file);
-  }
-}
 
   useEffect(() => {
-    // cleanup preview URL 
     return () => {
       if (pictureUrl && pictureUrl.startsWith("blob:")) {
         URL.revokeObjectURL(pictureUrl);
@@ -62,10 +56,10 @@ function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
 
   async function handleSavePlaylist() {
     try {
-      let finalPictureKey = pictureUrl;
+      setIsSaving(true); //  เริ่มโหลด
 
+      let finalPictureKey = pictureUrl;
       if (selectedImageFile) {
-        // อัปโหลดไฟล์ไปยัง R2 แล้วรับ key กลับมา
         finalPictureKey = await uploadImageToR2(selectedImageFile);
       }
 
@@ -74,7 +68,7 @@ function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name_playlist: playlistName,
-          picture: finalPictureKey, // ใช้ key ที่ upload สำเร็จ
+          picture: finalPictureKey,
           song: songIds.map(Number),
         }),
       });
@@ -86,34 +80,56 @@ function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
         return;
       }
 
-      alert("Playlist saved successfully!");
       setSaveMessage("Playlist ถูกบันทึกแล้ว");
     } catch (err: any) {
       setError("❌ " + err.message);
+    } finally {
+      setIsSaving(false); 
     }
   }
 
   return (
-    <div className="bg-neutral-900 min-h-screen text-white">
+    <div className="bg-neutral-900 min-h-screen text-white relative">
+      {/* Overlay โหลด */}
+      <LoadingOverlay show={isSaving} />
+
       {/* ส่วนบน: ปก + ข้อมูล playlist */}
       <div className="flex flex-col md:flex-row p-10 space-y-6 md:space-y-0 md:space-x-10 bg-black/60">
-        {/* Cover + ปรับลิงก์รูป */}
-        
-          <SongCover picture={pictureUrl} name="Playlist Cover" onImageChange={handleImageUpload} />
-    
+        {/* Cover */}
+        <Createplaylist
+          picture={pictureUrl}
+          name="Playlist Cover"
+          onImageChange={handleImageUpload}
+        />
 
-        {/* แก้ชื่อ + เหตุผล */}
+        {/* ข้อมูล Playlist */}
         <div className="flex-1 flex flex-col justify-between">
-          <div className="space-y-2">
+          {/* Input + ปุ่ม Save */}
+          <div className="flex items-center space-x-3">
             <input
               type="text"
               value={playlistName}
               onChange={(e) => setPlaylistName(e.target.value)}
               placeholder="ชื่อ Playlist"
-              className="w-full p-2 rounded text-white text-xl font-bold"
+              className="flex-1 p-2 rounded text-white text-xl font-bold "
             />
-            <p className="text-gray-400">AI Generated Playlist</p>
+            <button
+              onClick={handleSavePlaylist}
+              disabled={isSaving}
+              className="px-5 py-3 bg-violet-600 text-white hover:bg-violet-700 transition cursor-pointer rounded-3xl disabled:opacity-50"
+            >
+              {isSaving ? "Saving..." : "Save Playlist"}
+            </button>
           </div>
+
+          <p className="mt-2 text-gray-400">AI Generated Playlist</p>
+
+          {saveMessage && (
+            <p className="mt-2 text-green-500 font-medium">{saveMessage}</p>
+          )}
+          {error && (
+            <p className="mt-2 text-red-500 font-medium">{error}</p>
+          )}
 
           {reason && (
             <div className="mt-4 bg-neutral-800 p-4 rounded-md">
@@ -151,7 +167,7 @@ function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
                   <Smallpic picture={song.picture ?? ""} name={song.name_song} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-white truncate group-hover:text-blue-500 transition">
+                  <p className="font-medium text-white truncate group-hover:text-violet-500 transition">
                     {song.name_song}
                   </p>
                   <p className="text-sm text-gray-400 truncate">
@@ -167,19 +183,6 @@ function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
               <div className="col-span-1"></div>
             </div>
           ))}
-        </div>
-
-        {/* Save Playlist Section */}
-        <div className="mt-10">
-          <button
-            onClick={handleSavePlaylist}
-            className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-          >
-             Save Playlist
-          </button>
-
-          {saveMessage && <p className="mt-4 text-green-500 font-medium">{saveMessage}</p>}
-          {error && <p className="mt-4 text-red-500 font-medium">{error}</p>}
         </div>
       </div>
     </div>
