@@ -229,11 +229,16 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
       setCurrentTrack(song);
     } else {
       // เล่นเพลงเดี่ยว ๆ queue แค่เพลงเดียว
-      setQueue([song]);
+      setQueue([]);
       setQueueIndex(0);
-      setCurrentTrack(song);
     }
+    setCurrentTrack(song);
   };;
+
+  //   const playSong = (song: Song) => {
+  //   setCurrentDiaryAudioUrl(null);
+  //   setCurrentTrack(song);
+  // };
 
   const pause = () => {
     if (sound) {
