@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// สำหรับเพิ่ม view หรือ like
+  // สำหรับเพิ่ม view หรือ like
 export async function POST(req: NextRequest) {
   const { diaryId, action } = await req.json();
   const session = await getServerSession(authOptions);

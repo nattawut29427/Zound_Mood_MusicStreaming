@@ -9,6 +9,8 @@ import { ShortSong } from "@/components/types";
 import Image from "next/image";
 import { Play, X } from "lucide-react";
 import SongCover from "../cover_pic/Short/Shortpic";
+import FollowBt from "../button/FollowBt";
+import Link from "next/link";
 
 interface ShortSongModalProps {
   open: boolean;
@@ -26,10 +28,20 @@ export default function ShortSongModal({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const shortSong = shortsongs[currentIndex];
   const { data: session } = useSession();
-  const { playShortSong, stop } = usePlayer();
+  const { playShortSong, stop, position, duration, seek } = usePlayer();
 
   const urlImage = useSignedImage(shortSong?.user?.image || "");
   const audioUrl = useCachedSignedUrl(shortSong?.trimmedR2Key);
+
+  const progress = duration > 0 ? position / duration : 0;
+
+  const formatTime = (seconds: number) => {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60)
+      .toString()
+      .padStart(2, "0");
+    return `${min}:${sec}`;
+  };
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
@@ -72,7 +84,7 @@ export default function ShortSongModal({
         <SongCover
           picture={shortSong.song?.picture || "/fallback.jpg"}
           name={shortSong.song?.name_song || "Unknown"}
-         
+
         />
 
         {/* Tap to preview overlay */}
@@ -98,17 +110,36 @@ export default function ShortSongModal({
                 {shortSong.user?.name || "Unknown"}
               </p>
             </div>
-            <button className="ml-auto bg-white text-black px-2 md:px-3 py-1 md:py-1.5 rounded-full text-xs md:text-sm">
-              Follow
-            </button>
+            <div className="ml-auto bg-white text-black px-2 md:px-3 py-1 md:py-1.5 rounded-full text-xs md:text-sm">
+              <Link
+                key={shortSong?.song?.id}
+                href={`/viewsongs/${shortSong.song?.id}`}
+                className="block rounded-lg hover:opacity-80 transition"
+              >
+                <button
+                  className="px-2 py-1 bg-white text-black rounded-full text-xs md:text-sm"
+                  onClick={() => {
+                    stop();
+                    onClose();
+                  }}
+                >
+                  View Song
+                </button>
+              </Link>
+
+            </div>
+
           </div>
+
+
+
 
           {/* <div className="flex items-center gap-2 mt-2">
             <button
               className="bg-white/20 p-2 md:p-3 rounded-full"
               onClick={() => playShortSong(shortSong, audioUrl || "")}
             >
-              <Play className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            <Play className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </button>
             <p className="text-xs md:text-sm text-gray-300">Play preview</p>
           </div> */}

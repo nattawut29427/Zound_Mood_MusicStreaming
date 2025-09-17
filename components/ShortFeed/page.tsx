@@ -22,7 +22,7 @@ export default function ShortSongFeed({ shortsongs, onSongClick }: ShortSongFeed
     if (!shortsongs || shortsongs.length === 0 || !currentShort) {
         return (
             <div className="h-64 w-full flex items-center justify-center text-white">
-                <Loading/>
+                <Loading />
             </div>
         );
     }
@@ -30,10 +30,10 @@ export default function ShortSongFeed({ shortsongs, onSongClick }: ShortSongFeed
     return (
         <div className="h-full w-full bg-black  relative overflow-hidden flex flex-col hover:bg=black-80">
             {/* Tabs */}
-            <div className="flex justify-center gap-10 mt-6 text-white font-semibold">
+            {/* <div className="flex justify-center gap-10 mt-6 text-white font-semibold">
                 <button className="border-b-2 border-white pb-1">Discover</button>
                 <button className="text-gray-400">Following</button>
-            </div>
+            </div> */}
 
             {/* Preview Zone */}
             <div
@@ -66,21 +66,29 @@ export default function ShortSongFeed({ shortsongs, onSongClick }: ShortSongFeed
                         className="rounded-full"
                     />
                     <div>
-                        <p className="font-semibold">{currentShort.song?.name_song || "Unknown"}</p>
+
+                        <div className="overflow-hidden w-full group">
+                            <span
+                                className={`block font-bold text-md text-white whitespace-nowrap ${currentShort.song?.name_song.length > 30 ? "group-hover:animate-marquee" : ""
+                                    }`}
+                            >
+                                {currentShort.song?.name_song || "Unknown"}
+                            </span>
+                        </div>
                         <p className="text-sm text-gray-300">{currentShort.user?.name || "Unknown"}</p>
                     </div>
                     {/* <button className="ml-auto bg-white text-black px-3 py-1 rounded-full text-sm">
             Follow
           </button> */}
-                <div className="mt-2 flex items-center gap-2">
-                    <button
-                        className="bg-white/20 p-2 rounded-full"
+                    <div className="mt-2 flex items-center gap-2">
+                        <button
+                            className="bg-white/20 p-2 rounded-full"
 
-                    >
-                        <Play className="w-5 h-5 text-white" />
-                    </button>
-                    <p className="text-sm text-gray-300">Play preview</p>
-                </div>
+                        >
+                            <Play className="w-5 h-5 text-white" />
+                        </button>
+                        <p className="text-sm text-gray-300">Play preview</p>
+                    </div>
                 </div>
 
             </div>

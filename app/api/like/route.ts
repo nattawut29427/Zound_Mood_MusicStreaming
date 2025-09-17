@@ -69,7 +69,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json({ liked: false });
     } else {
-      // 👍 Like
+      //  Like
       await prisma.$transaction([
         prisma.likeSong.create({
           data: {

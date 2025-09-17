@@ -27,7 +27,11 @@ export default function ProfileClient({ user }: ProfileClientProps) {
   return (
     <div className="mb-20">
       {/* Banner */}
-      {session?.user?.id && <Card userId={session.user.id} initialBg={user.bg_image || ""} />}
+      <Card
+        userId={user.id} 
+        initialBg={user.bg_image || ""}
+        isOwner={isOwner} 
+      />
 
       {/* Profile image */}
       <div className="relative w-full flex justify-center">

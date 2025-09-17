@@ -3,6 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePlayer } from "@/app/context/Playercontext";
 import SongCover from "@/components/Songcover";
 import Link from "next/link";
+import LoadingSpinner from "../loading/Loading";
 
 export function ScrollAreaHorizontalDemo() {
   const [sections, setSections] = React.useState<any[]>([]);
@@ -35,8 +36,8 @@ export function ScrollAreaHorizontalDemo() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-40">
-        <p className="text-white">Loading songs...</p>
+      <div className="flex justify-center items-center h-40 m-auto">
+        <LoadingSpinner />
       </div>
     );
   }
@@ -91,9 +92,14 @@ export function ScrollAreaHorizontalDemo() {
                       />
 
                       <figcaption className="pt-2 text-xs text-muted-foreground">
-                        <span className="font-bold text-md text-white">
-                          {song.name_song}
-                        </span>
+                        <div className="overflow-hidden w-full group">
+                          <span
+                            className={`block font-bold text-md text-white whitespace-nowrap ${song.name_song.length > 30 ? "group-hover:animate-marquee" : ""
+                              }`}
+                          >
+                            {song.name_song}
+                          </span>
+                        </div>
                         <p className="text-md font-semibold text-muted-foreground">
                           {song.uploader.name}
                         </p>

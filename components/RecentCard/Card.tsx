@@ -63,7 +63,14 @@ export default function ListeningHistory() {
           </div>
 
           <div className="flex flex-col ">
-            <p className="font-semibold  text-white">{item.song.name_song}</p>
+            <div className="overflow-hidden w-full group">
+              <span
+                className={`block font-bold text-md text-white whitespace-nowrap ${item.song.name_song.length > 30 ? "group-hover:animate-marquee" : ""
+                  }`}
+              >
+                {item.song.name_song}
+              </span>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               ฟังเมื่อ: {new Date(item.listened_at).toLocaleString()}
             </p>

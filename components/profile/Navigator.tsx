@@ -4,10 +4,14 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Mdpic from "@/components/cover_pic/Mdpic";
 import { usePlayer } from "@/app/context/Playercontext";
-import { Song } from "@/components/types";
+import { Song, ShortSong } from "@/components/types";
 import Link from "next/link";
+import DropPF from "@/components/button/Profile/DropPF";
+import LoadingSpinner from "../loading/Loading";
+import DeleteSongButton from "../button/Delsg";
+import DeleteShortSongButton from "../button/short/DelShort";
 
-type TabName = "Popular" | "Track" | "Playlist" | "Like";
+type TabName = "Popular" | "Track" | "Playlist" | "Like" | "Short";
 
 type PlaylistSong = { song: Song };
 
@@ -38,6 +42,7 @@ type UserData = {
   songs?: Song[];
   playlists?: Playlist[];
   likesongs?: LikeSong[];
+  shortSongs?: ShortSong[];
   listeningHistories?: any[];
 };
 
@@ -46,7 +51,7 @@ interface NavigatorProps {
 }
 
 export default function Navigator({ userId }: NavigatorProps) {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<TabName>("Popular");
   const [userData, setUserData] = useState<UserData | null>(null);
   const { playSong, stop, isPlaying, playQueue } = usePlayer();
@@ -55,7 +60,7 @@ export default function Navigator({ userId }: NavigatorProps) {
   // สร้าง tabs เฉพาะที่ควรโชว์
   const availableTabs: TabName[] = ["Popular", "Track"];
   if (isOwner) {
-    availableTabs.push("Playlist", "Like");
+    availableTabs.push("Playlist", "Like", "Short");
   }
 
   useEffect(() => {
@@ -76,13 +81,19 @@ export default function Navigator({ userId }: NavigatorProps) {
   }, [userId]);
 
   if (!userData) {
-    return <div className="text-white">Loading user data...</div>;
+    return (
+      <div className="justify-center items-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
+
   const tabs: Record<TabName, any[]> = {
     Popular: userData.songs || [],
     Track: userData.songs || [],
     Playlist: userData.playlists || [],
     Like: userData.likesongs || [],
+    Short: userData.shortSongs || [],
   };
 
   return (
@@ -93,11 +104,10 @@ export default function Navigator({ userId }: NavigatorProps) {
           <span
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`cursor-pointer ${
-              activeTab === tab
+            className={`cursor-pointer ${activeTab === tab
                 ? "border-b-2 border-purple-600 text-white"
                 : "text-gray-500 hover:text-purple-500"
-            }`}
+              }`}
           >
             {tab}
           </span>
@@ -134,12 +144,14 @@ export default function Navigator({ userId }: NavigatorProps) {
                   onPauseClick={() => stop()}
                 />
                 <div className="flex flex-col ml-4">
-                  <span className="font-bold ml-2">
+                  <span className=" font-bold ml-2">{song.name_song}</span>
+                  <span className="font-medium ml-2">
                     {song.uploader?.name || "Unknown Artist"}
                   </span>
-                  <span className="font-medium ml-2">{song.name_song}</span>
                 </div>
-                <div className="text-gray-400 ml-auto">≡</div>
+                <div className=" ml-auto">
+                  <DropPF songId={song.id} picture={song.picture || ""} />
+                </div>
               </div>
             </Link>
           ))}
@@ -154,7 +166,7 @@ export default function Navigator({ userId }: NavigatorProps) {
             >
               <div
                 key={playlist.id}
-                className="flex items-center cursor-pointer hover:bg-indigo-800 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
+                className="flex items-center cursor-pointer hover:bg-neutral-950 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
               >
                 <Mdpic
                   picture={playlist.pic_playlists}
@@ -168,10 +180,10 @@ export default function Navigator({ userId }: NavigatorProps) {
                   onPauseClick={() => stop()}
                 />
                 <div className="flex flex-col ml-4">
-                  <span className="font-bold ml-2">{playlist.user?.name}</span>
-                  <span className="font-medium ml-2">
+                  <span className="font-bold ml-2">
                     {playlist.name_playlist}
                   </span>
+                  <span className="font-medium ml-2">{playlist.user?.name}</span>
                 </div>
                 <div className="text-gray-400 ml-auto">≡</div>
               </div>
@@ -188,7 +200,7 @@ export default function Navigator({ userId }: NavigatorProps) {
             >
               <div
                 key={like.id}
-                className="flex items-center cursor-pointer hover:bg-indigo-800 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
+                className="flex items-center cursor-pointer hover:bg-neutral-950 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
               >
                 <Mdpic
                   picture={like.song.picture || "/fallback.jpg"}
@@ -201,16 +213,41 @@ export default function Navigator({ userId }: NavigatorProps) {
                   onPauseClick={() => stop()}
                 />
                 <div className="flex flex-col ml-4">
-                  <span className="font-bold ml-2">
-                    {like.song.uploader?.name || "Unknown Artist"}
-                  </span>
                   <span className="font-medium ml-2">
                     {like.song.name_song}
+                  </span>
+                  <span className="font-bold ml-2">
+                    {like.song.uploader?.name || "Unknown Artist"}
                   </span>
                 </div>
                 <div className="text-gray-400 ml-auto">≡</div>
               </div>
             </Link>
+          ))}
+
+        {/* Short */}
+        {activeTab === "Short" &&
+          tabs.Short.map((short: ShortSong) => (
+
+            <div
+              key={short.id}
+              className="flex items-center cursor-pointer hover:bg-neutral-950 text-gray-600 hover:text-white p-2 rounded-xl duration-300"
+            >
+              <Mdpic
+                picture={short.song?.picture || "/fallback.jpg"}
+                name={short.song?.name_song || "Untitled"}
+              />
+              <div className="flex flex-col ml-4">
+                <span className="font-bold ml-2">
+                  {short.song?.name_song || "Unknown Artist"}
+                </span>
+                <span className="font-medium ml-2">
+                  {session?.user.username || "No name"}
+                </span>
+              </div>
+              <div className=" ml-auto"><DeleteShortSongButton shortSongId={short.id} songName={short.song?.name_song || "Unknown Artist"} /></div>
+            </div>
+
           ))}
       </div>
     </div>
