@@ -1,21 +1,39 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFile } from "@/app/context/Filecontext";
 
 export default function Page() {
   const router = useRouter();
-
   const { setFile } = useFile();
+
+  const [error, setError] = useState<string>("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFile(file);
-      router.push("/newupload/formupload");
+    if (!file) return;
+
+    // ตรวจสอบประเภทไฟล์
+    const validTypes = ["audio/mpeg", "audio/wav", "audio/mp3"];
+    if (!validTypes.includes(file.type)) {
+      setError("รองรับเฉพาะไฟล์ .mp3 และ .wav เท่านั้น");
+      return;
     }
+
+    // ตรวจสอบขนาดไฟล์ (เช่น < 50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      setError("ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 50MB)");
+      return;
+    }
+
+    // ผ่านการตรวจสอบ → เซ็ตไฟล์และไปต่อ
+    setError("");
+    setFile(file);
+    router.push("/newupload/formupload");
   };
+
   return (
     <>
       <div className="text-white p-10 font-bold text-3xl">Upload your song</div>
@@ -29,7 +47,7 @@ export default function Page() {
               Upload file here
             </div>
             <div className="text-sm text-gray-400 mt-1">
-              (Only .mp3, .wav files)
+              (Only .mp3, .wav files, max 50MB)
             </div>
           </label>
           <input
@@ -39,6 +57,11 @@ export default function Page() {
             className="hidden"
             onChange={handleFileChange}
           />
+
+          {/* แสดง error ถ้ามี */}
+          {error && (
+            <p className="text-red-400 mt-4 text-center font-medium">{error}</p>
+          )}
         </div>
       </div>
     </>

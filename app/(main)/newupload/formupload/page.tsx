@@ -17,10 +17,9 @@ export default function Page() {
   const [message, setMessage] = useState("");
   const [picture, setPicture] = useState<File | null>(null);
   const [description, setDescription] = useState("");
-
-  // Tag state
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Crop states
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -37,13 +36,24 @@ export default function Page() {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
+  // ✅ เพิ่ม Backspace เพื่อลบ tag ล่าสุด
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Enter หรือ Space เพื่อเพิ่ม tag
     if ((e.key === " " || e.key === "Enter") && tagInput.trim() !== "") {
       e.preventDefault();
       if (!tags.includes(tagInput.trim())) {
         setTags([...tags, tagInput.trim()]);
       }
       setTagInput("");
+    }
+
+    // Backspace เพื่อลบ tag ล่าสุด และเอาค่ากลับมาแก้ในช่อง input
+    if (e.key === "Backspace" && tagInput === "" && tags.length > 0) {
+      e.preventDefault();
+      const newTags = [...tags];
+      const lastTag = newTags.pop(); // ลบ tag สุดท้าย
+      setTags(newTags);
+      if (lastTag) setTagInput(lastTag); // เอาค่ามาแก้ใน input
     }
   };
 
@@ -57,6 +67,7 @@ export default function Page() {
       return;
     }
 
+    setLoading(true);
     try {
       // Crop รูปก่อนอัปโหลด
       const croppedBlob = await getCroppedImg(picture, croppedAreaPixels);
@@ -100,7 +111,7 @@ export default function Page() {
           audio_urlKey: songKey,
           pictureKey: picKey,
           uploaded_by: userId,
-           tag: tags.join(","), 
+          tag: tags.join(","),
           description,
         }),
       });
@@ -108,6 +119,7 @@ export default function Page() {
       const saveData = await saveRes.json();
       if (!saveRes.ok) {
         setMessage("บันทึกข้อมูลเพลงล้มเหลว: " + (saveData.error || ""));
+        setLoading(false);
         return;
       }
 
@@ -118,10 +130,17 @@ export default function Page() {
     } catch (error: any) {
       setMessage("เกิดข้อผิดพลาด: " + error.message);
     }
+    setLoading(false);
   };
 
   return (
-    <div className="text-white min-h-screen p-10">
+    <div className="text-white min-h-screen p-10 relative">
+      {loading && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="w-16 h-16 border-4 border-t-violet-500 border-white rounded-full animate-spin"></div>
+        </div>
+      )}
+
       <h1 className="text-4xl font-bold mb-6">Upload Your Song</h1>
 
       {message && <p className="mb-6 text-center text-gray-300 font-medium">{message}</p>}
@@ -152,7 +171,6 @@ export default function Page() {
                 />
               </div>
 
-              {/* Zoom slider */}
               <input
                 type="range"
                 min={1}
@@ -205,11 +223,7 @@ export default function Page() {
                 className="flex items-center gap-1 px-3 py-1 rounded-full"
               >
                 {tag}
-                <X
-                  size={14}
-                  className="cursor-pointer"
-                  onClick={() => removeTag(tag)}
-                />
+
               </Badge>
             ))}
             <input
@@ -222,7 +236,6 @@ export default function Page() {
             />
           </div>
 
-
           <label className="font-medium">Description</label>
           <textarea
             rows={4}
@@ -232,12 +245,14 @@ export default function Page() {
             onChange={(e) => setDescription(e.target.value)}
           />
 
-          <button
-            onClick={handleUpload}
-            className="mt-4 bg-violet-500 hover:bg-violet-600 transition w-fit px-4 text-white font-bold py-3 rounded-xl"
-          >
-            Upload
-          </button>
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={handleUpload}
+              className="bg-violet-600 hover:bg-violet-700 transition px-12 text-white font-bold py-3 rounded-xl cursor-pointer duration-300"
+            >
+              Upload
+            </button>
+          </div>
         </div>
       </div>
     </div>
