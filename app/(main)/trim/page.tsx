@@ -133,7 +133,7 @@ export default function SelectMusicPage() {
             }`}
             onClick={() => handleSelectSong(song)}
           >
-            <img src={song.picture} alt={song.name_song} className={styles.songImage} />
+            <img src={song.picture || ""} alt={song.name_song} className={styles.songImage} />
             <div>
               <p className={styles.songName}>{song.name_song}</p>
               {/* ตรวจสอบว่ามี artist_name หรือไม่ ถ้ามีก็แสดง */}

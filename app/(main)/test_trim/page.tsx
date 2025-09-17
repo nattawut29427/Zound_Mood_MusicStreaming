@@ -8,28 +8,32 @@ import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 import { Song } from "@/components/types";
 import Smallpic from "@/components/cover_pic/Smallpic";
 
-// const getR2KeyFromUrl = (url: string): string => {
-//   if (url.startsWith("http://") || url.startsWith("https://")) {
-//     const p = new URL(url).pathname.substring(1);
-//     return `storagemusic/${p}`;
-//   }
-//   return `storagemusic/${url}`;
-// };
+// helper แปลงวินาที → mm:ss
+const formatTime = (time: number) =>
+  new Date(time * 1000).toISOString().substr(14, 5);
 
 export default function SelectMusicPage({
   onSelect,
 }: {
-  onSelect?: (data: { song_id: number;  audioUrl: string; start: number; duration: number }) => void;
+  onSelect?: (data: {
+    song_id: number;
+    audioUrl: string;
+    start: number;
+    duration: number;
+  }) => void;
 }) {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const regionRef = useRef<any>(null);
+
   const [songs, setSongs] = useState<Song[]>([]);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState(30);
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false);
+
   const signedUrl = useCachedSignedUrl(selectedSong?.audio_url);
 
   useEffect(() => {
@@ -44,7 +48,11 @@ export default function SelectMusicPage({
   useEffect(() => {
     if (!signedUrl || !waveformRef.current) return;
 
-    wavesurferRef.current?.destroy();
+    // destroy เดิมก่อนสร้างใหม่
+    if (wavesurferRef.current) {
+      wavesurferRef.current.stop();
+      wavesurferRef.current.destroy();
+    }
 
     const regions = RegionsPlugin.create();
     const wavesurfer = WaveSurfer.create({
@@ -61,13 +69,14 @@ export default function SelectMusicPage({
     });
 
     wavesurfer.load(signedUrl);
+
     wavesurfer.on("ready", () => {
       const totalDuration = wavesurfer.getDuration();
       const region = regions.addRegion({
         start: 0,
         end: Math.min(30, totalDuration),
         color: "rgba(255,255,255,0.2)",
-        resize: false,
+        resize: true, //  ให้ resize ได้
         drag: true,
       });
 
@@ -75,6 +84,7 @@ export default function SelectMusicPage({
       setStart(region.start);
       setEnd(region.end);
 
+      // style กรอบ region
       setTimeout(() => {
         const el = region.element as HTMLElement;
         if (el) {
@@ -89,9 +99,9 @@ export default function SelectMusicPage({
         regionRef.current = region;
 
         wavesurfer.setTime(region.start);
-        wavesurfer.play();
       });
 
+      // loop
       wavesurfer.on("audioprocess", () => {
         const current = wavesurfer.getCurrentTime();
         const region = regionRef.current;
@@ -99,10 +109,10 @@ export default function SelectMusicPage({
           wavesurfer.setTime(region.start);
         }
       });
-
-      wavesurfer.setTime(region.start);
-      wavesurfer.play();
     });
+
+    wavesurfer.on("play", () => setIsPlaying(true));
+    wavesurfer.on("pause", () => setIsPlaying(false));
 
     wavesurferRef.current = wavesurfer;
 
@@ -185,14 +195,25 @@ export default function SelectMusicPage({
         <div className="p-4 border-t border-zinc-700 bg-zinc-900">
           <div ref={waveformRef} className="mb-2" />
           <p className="text-sm mb-2">
-            Start: {start.toFixed(2)}s | End: {end.toFixed(2)}s
+            Start: {formatTime(start)} | End: {formatTime(end)}
           </p>
-          <button
-            onClick={handleSubmit}
-            className="w-full py-2 rounded-lg bg-black hover:bg-black transition"
-          >
-             เลือกเพลงนี้
-          </button>
+
+          {/* ปุ่มควบคุม */}
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => wavesurferRef.current?.playPause()}
+              className="flex-1 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 transition"
+            >
+              {isPlaying ? "⏸ Pause" : "▶ Play"}
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="flex-1 py-2 rounded-lg bg-black hover:bg-black transition"
+            >
+              เลือกเพลงนี้
+            </button>
+          </div>
+
           {message && <p className="text-sm mt-2 text-center">{message}</p>}
         </div>
       )}
