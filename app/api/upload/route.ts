@@ -36,13 +36,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const newSong = await prisma.song.create({
+   const newSong = await prisma.song.create({
       data: {
         name_song,
         audio_url: audio_urlKey,
         uploaded_by,
         picture: pictureKey,
         description: description,
+        stat: {
+          create: {
+            play_count: 0,
+            like_count: 0,
+          },
+        },
       },
       select: {
         id: true,
@@ -51,7 +57,13 @@ export async function POST(req: NextRequest) {
         uploaded_by: true,
         created_at: true,
         picture: true,
-        description: true, 
+        description: true,
+        stat: {
+          select: {
+            play_count: true,
+            like_count: true,
+          },
+        },
       },
     });
 

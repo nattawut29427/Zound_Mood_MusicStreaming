@@ -15,11 +15,11 @@ export default function DashCover({
     const signedUrl = useCachedSignedUrl(picture);
 
     return (
-        <div className="relative  overflow-hidden rounded-xl shadow-md ">
+        <div className="relative  overflow-hidden rounded-2xl shadow-md ">
             <Image
                 src={signedUrl || "/2.jpg"}
                 alt={name}
-                width={420}
+                width={500}
                 height={400}
                 className="object-cover aspect-[4/4] hover:scale-110 transition-transform duration-300"
             />

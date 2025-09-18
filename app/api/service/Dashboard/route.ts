@@ -42,11 +42,23 @@ export async function GET() {
       where: { followed_user_id: userId },
     });
 
+
+
     const topSongForCard = await prisma.song.findFirst({
-      where: { uploaded_by: userId },
+      where: {
+        uploaded_by: userId,
+        stat: { isNot: null }, 
+      },
       orderBy: { stat: { play_count: "desc" } },
-      select: { picture: true, name_song: true, stat: { select: { play_count: true } } },
-    });
+      select: {
+        picture: true,
+        name_song: true,
+        stat: { select: { play_count: true } },
+      },
+    })
+
+
+
 
     // ดึงเพลงทั้งหมดของ user เรียงตามยอดฟัง
     const topSongs = await prisma.song.findMany({
