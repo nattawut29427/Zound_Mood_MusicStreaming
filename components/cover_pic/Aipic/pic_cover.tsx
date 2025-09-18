@@ -93,18 +93,18 @@ export default function SongCover({
           {/* ปุ่ม Upload รูป */}
           {onImageChange && (
             <>
-              <div className="absolute inset-0 flex items-center justify-center z-40 opacity-0 group-hover:opacity-100 transition">
+              <div className="absolute inset-0 flex items-center justify-center z-40 opacity-100 transition">
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="bg-white text-black px-3 py-1 rounded-full hover:bg-gray-300 cursor-pointer transition"
                 >
-                  Upload new image
+                  Upload image
                 </button>
               </div>
               <input
                 type="file"
                 accept="image/*"
-                ref={fileInputRef || "/2.jpg"}
+                ref={fileInputRef}
                 className="hidden"
                 onChange={handleFileChange}
               />

@@ -5,8 +5,8 @@ import { useGeneratedPlaylist } from "@/app/context/GeneratedPlaylistContext";
 import { Song } from "@/components/types";
 import Smallpic from "@/components/cover_pic/Smallpic";
 import { uploadImageToR2 } from "@/lib/uploadImage";
-import Createplaylist from "@/components/cover_pic/Createplaylist";
-import LoadingOverlay from "@/components/Loadingoveray/page"; // 👈 import
+import Cover from "@/components/cover_pic/Aipic/pic_cover";
+import LoadingOverlay from "@/components/Loadingoveray/page"; 
 
 const AIGenResultPage = () => {
   const {
@@ -93,10 +93,10 @@ const AIGenResultPage = () => {
       {/* Overlay โหลด */}
       <LoadingOverlay show={isSaving} />
 
-      {/* ส่วนบน: ปก + ข้อมูล playlist */}
+      {/* ส่วนบน: ปก  ข้อมูล playlist */}
       <div className="flex flex-col md:flex-row p-10 space-y-6 md:space-y-0 md:space-x-10 bg-black/60">
         {/* Cover */}
-        <Createplaylist
+        <Cover
           picture={pictureUrl}
           name="Playlist Cover"
           onImageChange={handleImageUpload}
