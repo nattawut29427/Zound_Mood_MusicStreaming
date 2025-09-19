@@ -167,6 +167,10 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         setIsPlaying(false);
         if (isLooping) return;
 
+        if (currentDiaryAudioUrl) {
+          return;
+        }
+
         if (queue.length > 0) playNext();
         else if (isAutoContinue && currentTrack) {
           try {
@@ -219,21 +223,31 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const playSong = (song: Song, songs?: Song[]) => {
+   
+    if (sound) {
+      try {
+        sound.stop();
+        sound.unload();
+      } catch (e) {
+        console.error("Failed to stop previous sound:", e);
+      }
+      setSound(null);
+    }
+
     setCurrentDiaryAudioUrl(null);
 
     if (songs && songs.length > 0) {
-      // เล่นเพลงจาก playlist ใช้ queue ของ playlist
       const index = songs.findIndex((s) => s.id === song.id);
       setQueue(songs);
       setQueueIndex(index >= 0 ? index : 0);
-      setCurrentTrack(song);
     } else {
-      // เล่นเพลงเดี่ยว ๆ queue แค่เพลงเดียว
       setQueue([]);
       setQueueIndex(0);
     }
+
+
     setCurrentTrack(song);
-  };;
+  };
 
   //   const playSong = (song: Song) => {
   //   setCurrentDiaryAudioUrl(null);
@@ -250,6 +264,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const stop = () => {
     if (sound) {
       sound.stop();
+      sound.unload();
       setIsPlaying(false);
       setIsShortSongPlaying(false);
       setCurrentTrack(null);

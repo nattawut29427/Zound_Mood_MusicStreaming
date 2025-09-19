@@ -36,6 +36,19 @@ function DiaryCard({
     if (el && el.scrollHeight > MAX_HEIGHT) setIsOverflowing(true);
   }, []);
 
+  function timeAgo(dateString: string): string {
+  const now = new Date();
+  const past = new Date(dateString);
+  const diff = Math.floor((now.getTime() - past.getTime()) / 1000); // วินาที
+
+  if (diff < 60) return `${diff} seconds ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+  if (diff < 2592000) return `${Math.floor(diff / 86400)} days ago`; // น้อยกว่า 30 วัน
+  return past.toLocaleDateString("th-TH"); // ถ้าเกิน 30 วัน แสดงวันที่แทน
+}
+
+
   return (
     <div
       className="border rounded-lg p-3 mb-4 shadow-sm bg-white w-[280px] h-[30rem] text-sm flex flex-col hover:bg-gray-100"
@@ -52,7 +65,7 @@ function DiaryCard({
           <span className="text-sm font-medium">{diary.user?.name}</span>
         </div>
         <span className="text-xs text-gray-500 whitespace-nowrap">
-          {format(new Date(diary.created_at), "yy-MM-dd HH:mm")}
+        {timeAgo(diary.created_at)}
         </span>
       </div>
 

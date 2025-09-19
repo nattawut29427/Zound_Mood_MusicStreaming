@@ -119,9 +119,9 @@ export function DiaryModal({
                 />
                 <p className="font-bold">{diary.user?.name}</p>
               </div>
-              <DialogDescription>
+              {/* <DialogDescription>
                 {new Date(diary.created_at).toLocaleString()}
-              </DialogDescription>
+              </DialogDescription> */}
             </DialogHeader>
 
             <div className="prose prose-sm max-w-none text-black mb-4">
@@ -163,7 +163,7 @@ export function DiaryModal({
               }
               ${loading ? "opacity-50 pointer-events-none" : ""}`}
           >
-            {liked ? "❤️ Liked" : "🤍 Like"}
+            {liked ? "❤️ Like" : "🤍 Like"}
           </button>
 
           {/* ปุ่ม Prev */}

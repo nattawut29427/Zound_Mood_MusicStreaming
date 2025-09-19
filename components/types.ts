@@ -25,7 +25,7 @@ export interface Diary {
   song_id: number;
   user_id: string;
   is_private: boolean;
-  created_at: Date;
+  created_at: string;
   song_removed: false;
   song?: Song | null; // Optional relation
   user?: Uploader | null; // Optional relation
