@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-  // สำหรับเพิ่ม view หรือ like
+// สำหรับเพิ่ม view หรือ like
 export async function POST(req: NextRequest) {
   const { diaryId, action } = await req.json();
   const session = await getServerSession(authOptions);
@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
+
       // ตรวจสอบว่ากด like ไปแล้วหรือยัง
       const alreadyLiked = await prisma.diaryLike.findUnique({
         where: {
@@ -88,6 +89,7 @@ export async function POST(req: NextRequest) {
       if (alreadyLiked) {
         return NextResponse.json({ liked: true }); // กด like ไปแล้ว
       }
+
 
       // ยังไม่เคย like มาก่อน
       await prisma.diaryLike.create({
@@ -105,6 +107,24 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ liked: true });
     }
+
+    if (action === "unlike") {
+      if (!userId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      await prisma.diaryLike.deleteMany({
+        where: { diary_id: parsedDiaryId, user_id: userId },
+      });
+
+      await prisma.diaryStat.update({
+        where: { diary_id: parsedDiaryId },
+        data: { like_count: { decrement: 1 } },
+      });
+
+      return NextResponse.json({ unliked: true });
+    }
+
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {

@@ -15,6 +15,11 @@ export async function DELETE(
       );
     }
 
+    await prisma.$transaction([
+      prisma.diaryStat.deleteMany({where: {diary_id: diaryId}}),
+      prisma.diaryLike.deleteMany({where: {diary_id: diaryId}})
+    ])
+
     await prisma.diary.delete({
       where: { id: diaryId },
     });

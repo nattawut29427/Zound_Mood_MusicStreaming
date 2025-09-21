@@ -37,16 +37,16 @@ function DiaryCard({
   }, []);
 
   function timeAgo(dateString: string): string {
-  const now = new Date();
-  const past = new Date(dateString);
-  const diff = Math.floor((now.getTime() - past.getTime()) / 1000); // วินาที
+    const now = new Date();
+    const past = new Date(dateString);
+    const diff = Math.floor((now.getTime() - past.getTime()) / 1000); // วินาที
 
-  if (diff < 60) return `${diff} seconds ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
-  if (diff < 2592000) return `${Math.floor(diff / 86400)} days ago`; // น้อยกว่า 30 วัน
-  return past.toLocaleDateString("th-TH"); // ถ้าเกิน 30 วัน แสดงวันที่แทน
-}
+    if (diff < 60) return `${diff} seconds ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    if (diff < 2592000) return `${Math.floor(diff / 86400)} days ago`; // น้อยกว่า 30 วัน
+    return past.toLocaleDateString("th-TH"); // ถ้าเกิน 30 วัน แสดงวันที่แทน
+  }
 
 
   return (
@@ -65,7 +65,7 @@ function DiaryCard({
           <span className="text-sm font-medium">{diary.user?.name}</span>
         </div>
         <span className="text-xs text-gray-500 whitespace-nowrap">
-        {timeAgo(diary.created_at)}
+          {timeAgo(diary.created_at)}
         </span>
       </div>
 
@@ -177,29 +177,39 @@ export default function DiaryPage() {
         </button>
       </div>
 
-      {/* Diaries */}
-      <ScrollArea>
-        <div className="flex flex-row h-fit gap-4 cursor-pointer ">
-          {diaries.map((diary) => (
-            <DiaryCard
-              key={diary.id}
-              diary={diary}
-              onClick={() => {
-                incrementDiaryView(diary.id);
-                playDiary(diary);
-                setSelectedDiary(diary);
-                setIsOpen(true);
-              }}
-              onExpand={() => {
-                incrementDiaryView(diary.id);
-                playDiary(diary);
-                setSelectedDiary(diary);
-                setIsOpen(true);
-              }}
-            />
-          ))}
+      
+      {diaries.length === 0 ? (
+        <div className="flex justify-center items-center h-[450px]">
+          <p className="text-gray-500 text-lg font-medium">
+            {tab === "my"
+              ? "Started your diary "
+              : "ยังไม่มีไดอารี่จากผู้ที่คุณติดตาม"}
+          </p>
         </div>
-      </ScrollArea>
+      ) : (
+        <ScrollArea>
+          <div className="flex flex-row h-fit gap-4 cursor-pointer">
+            {diaries.map((diary) => (
+              <DiaryCard
+                key={diary.id}
+                diary={diary}
+                onClick={() => {
+                  incrementDiaryView(diary.id);
+                  playDiary(diary);
+                  setSelectedDiary(diary);
+                  setIsOpen(true);
+                }}
+                onExpand={() => {
+                  incrementDiaryView(diary.id);
+                  playDiary(diary);
+                  setSelectedDiary(diary);
+                  setIsOpen(true);
+                }}
+              />
+            ))}
+          </div>
+        </ScrollArea>
+      )}
 
       {/* Create Diary */}
       <button
