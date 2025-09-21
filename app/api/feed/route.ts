@@ -5,44 +5,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 // ---------------------
-// AI Playlist Generator
+// AI Playlist Generator (ยังคงไว้ ถ้าอยากเปิดใช้)
 // ---------------------
 const groq = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
   baseURL: "https://api.groq.com/openai/v1",
 });
 
-async function generateAIPlaylist(prompt: string, songs: any[]) {
-  const fullPrompt = `
-คุณคือนักจัด Playlist อัจฉริยะ
-คำขอของผู้ใช้: "${prompt}"
-ข้อมูลเพลง:
-${JSON.stringify(songs, null, 2)}
-โปรดเลือกเพลงจากข้อมูลด้านบนที่เหมาะสมที่สุดกับคำขอของผู้ใช้
-ตอบกลับเฉพาะ JSON ในรูปแบบนี้:
-{ "playlist": [/* รหัสเพลง */], "reason": "คำอธิบายเหตุผล" }
-`;
-  const res = await groq.chat.completions.create({
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
-    messages: [
-      { role: "system", content: "คุณคือผู้ช่วยแนะนำเพลงที่เข้าใจความรู้สึกจากเพลง" },
-      { role: "user", content: fullPrompt },
-    ],
-    temperature: 0.5,
-  });
-  const reply = res.choices[0].message.content;
-  try {
-    const jsonStart = reply.indexOf("{");
-    if (jsonStart === -1) throw new Error("No JSON found");
-    const jsonText = reply.slice(jsonStart);
-    return JSON.parse(jsonText);
-  } catch {
-    return { playlist: [], reason: "" };
-  }
-}
-
 // ---------------------
-// Shuffle แบบ Seeded
+// Utils
 // ---------------------
 function shuffleArraySeed<T>(array: T[], seed: number): T[] {
   const arr = [...array];
@@ -54,13 +25,10 @@ function shuffleArraySeed<T>(array: T[], seed: number): T[] {
   return arr;
 }
 
-// ---------------------
-// Filter Unique per Section
-// ---------------------
-function filterUniqueBySection(songs: any[], sectionSeen: Set<number>) {
+function filterUnique<T extends { id: number }>(songs: T[], seen: Set<number>) {
   return songs.filter((s) => {
-    if (sectionSeen.has(s.id)) return false;
-    sectionSeen.add(s.id);
+    if (seen.has(s.id)) return false;
+    seen.add(s.id);
     return true;
   });
 }
@@ -70,26 +38,91 @@ function filterUniqueBySection(songs: any[], sectionSeen: Set<number>) {
 // ---------------------
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  const todaySeed = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''));
+  const todaySeed = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ""));
   try {
-    let sections: any[] = [];
+    const sections: any[] = [];
+    const userId = session?.user?.id;
 
-    //  Followed
-    if (session?.user?.id) {
-      const followedUsers = await prisma.follow.findMany({
-        where: { following_user_id: session.user.id },
-        select: { followed_user_id: true },
+    // run queries in parallel
+    const [
+      followedUsers,
+      likedSongs,
+      historySongs,
+      allSongs,
+      newReleases,
+      dbSections,
+    ] = await Promise.all([
+      userId
+        ? prisma.follow.findMany({
+          where: { following_user_id: userId },
+          select: { followed_user_id: true },
+        })
+        : Promise.resolve([]),
+
+      userId
+        ? prisma.likeSong.findMany({
+          where: { user_id: userId },
+          include: {
+            song: {
+              include: {
+                song_tags: { include: { tag: true } },
+                uploader: true,
+                stat: true,
+              },
+            },
+          },
+          take: 50,
+        })
+        : Promise.resolve([]),
+
+      userId
+        ? prisma.listeningHistory.findMany({
+          where: { user_id: userId },
+          include: {
+            song: {
+              include: {
+                song_tags: { include: { tag: true } },
+                uploader: true,
+                stat: true,
+              },
+            },
+          },
+          take: 50,
+        })
+        : Promise.resolve([]),
+
+      prisma.song.findMany({
+        include: { stat: true, uploader: true, song_tags: { include: { tag: true } } },
+        take: 200, // limit เพื่อไม่โหลดทั้ง DB
+      }),
+
+      prisma.song.findMany({
+        where: { created_at: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+        orderBy: { created_at: "desc" },
+        include: { uploader: true, stat: true, song_tags: { include: { tag: true } } },
+        take: 50,
+      }),
+
+      prisma.feedSection.findMany({
+        include: { feed_items: { include: { song: { include: { uploader: true, stat: true } } } } },
+      }),
+    ]);
+
+    // ====================
+    // Section: Followed
+    // ====================
+    if (userId && followedUsers.length) {
+      const followedIds = followedUsers.map((f) => f.followed_user_id);
+      let pool = await prisma.song.findMany({
+        where: { uploaded_by: { in: followedIds } },
+        include: { uploader: true, stat: true },
+        take: 30,
       });
-      if (followedUsers.length) {
-        const followedIds = followedUsers.map(f => f.followed_user_id);
-        let pool = await prisma.song.findMany({
-          where: { uploaded_by: { in: followedIds } },
-          include: { uploader: true, stat: true },
-        });
-        const sectionSeen = new Set<number>();
-        pool = filterUniqueBySection(pool, sectionSeen);
-        pool = shuffleArraySeed(pool, todaySeed).slice(0, 10);
-        if (pool.length) sections.push({
+      const seen = new Set<number>();
+      pool = filterUnique(pool, seen);
+      pool = shuffleArraySeed(pool, todaySeed).slice(0, 10);
+      if (pool.length) {
+        sections.push({
           id: "sys-followed",
           title: "Your follow",
           description: "Songs uploaded by people you follow",
@@ -98,189 +131,179 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    //  Tags
-    if (session?.user?.id) {
-      const [likedSongs, historySongs] = await Promise.all([
-        prisma.likeSong.findMany({
-          where: { user_id: session.user.id },
-          include: { song: { include: { song_tags: { include: { tag: true } }, uploader: true, stat: true } } },
-          take: 20,
-        }),
-        prisma.listeningHistory.findMany({
-          where: { user_id: session.user.id },
-          include: { song: { include: { song_tags: { include: { tag: true } }, uploader: true, stat: true } } },
-          take: 20,
-        }),
-      ]);
-
+    // ====================
+    // Section: Tags
+    // ====================
+    if (userId && (likedSongs.length || historySongs.length)) {
       const favTags = new Set<string>();
-      likedSongs.forEach(s => s.song.song_tags.forEach(st => favTags.add(st.tag.name_tag)));
-      historySongs.forEach(h => h.song.song_tags.forEach(st => favTags.add(st.tag.name_tag)));
+      likedSongs.forEach((s) => s.song.song_tags.forEach((st) => favTags.add(st.tag.name_tag)));
+      historySongs.forEach((h) => h.song.song_tags.forEach((st) => favTags.add(st.tag.name_tag)));
       const topTags = Array.from(favTags).slice(0, 5);
-
 
       if (topTags.length) {
         let pool = await prisma.song.findMany({
           where: { song_tags: { some: { tag: { name_tag: { in: topTags } } } } },
           include: { uploader: true, stat: true, song_tags: { include: { tag: true } } },
+          take: 50,
         });
-        console.log("Pool before filter:", pool.map(s => ({ id: s.id, name: s.name_song })));
 
-
-        const sectionSeen = new Set<number>();
-        pool = filterUniqueBySection(pool, sectionSeen);
+        const seen = new Set<number>();
+        pool = filterUnique(pool, seen);
         pool = shuffleArraySeed(pool, todaySeed).slice(0, 10);
-        if (pool.length) sections.push({
-          id: "sys-tags",
-          title: "Based on Your Tags",
-          description: "Recommended songs from your favorite tags",
-          feed_items: pool.map((s, i) => ({ id: s.id, order_index: i, song: s })),
-
-        });
-
-        pool = filterUniqueBySection(pool, sectionSeen);
-        
-        console.log("Pool after filterUniqueBySection:", pool.map(s => ({ id: s.id, name: s.name_song })));
-
-
+        if (pool.length) {
+          sections.push({
+            id: "sys-tags",
+            title: "Based on Your Tags",
+            description: "Recommended songs from your favorite tags",
+            feed_items: pool.map((s, i) => ({ id: s.id, order_index: i, song: s })),
+          });
+        }
       }
+    }
 
-      console.log("Top tags for user:", topTags);
+    // ====================
+    // Section: Trending
+    // ====================
+    allSongs.forEach((s) => {
+      if (!s.stat) s.stat = { song_id: s.id, play_count: 0, like_count: 0 };
+    });
+    const trending = [...allSongs]
+      .sort((a, b) => (b.stat?.play_count || 0) - (a.stat?.play_count || 0))
+      .slice(0, 10);
 
-
+    if (trending.length) {
+      sections.push({
+        id: "sys-trending",
+        title: "Trending",
+        feed_items: trending.map((s, i) => ({ id: s.id, order_index: i, song: s })),
+      });
     }
 
 
-    //  Trending
-    let allSongs = await prisma.song.findMany({
-      include: { stat: true, uploader: true, song_tags: { include: { tag: true } } },
-    });
+    // ====================
+    // Section: New User Default Feed
+    // ====================
+    if (!userId || (!likedSongs.length && !historySongs.length && !followedUsers.length)) {
 
-    // ใส่ค่า default สำหรับ stat หากเป็น null
-    allSongs.forEach(song => {
-      if (!song.stat) {
-        song.stat = { song_id: song.id, play_count: 0, like_count: 0 };
-      }
-    });
-
-    // เรียงจาก view สูงสุด
-    allSongs.sort((a, b) => b.stat!.play_count - a.stat!.play_count);
-
-    // สร้าง seen ใหม่สำหรับ trending
-    const seenTrending = new Set<number>();
-    const trending = allSongs.filter(s => {
-      if (seenTrending.has(s.id)) return false;
-      seenTrending.add(s.id);
-      return true;
-    }).slice(0, 10);
-
-    if (trending.length) sections.push({
-      id: "sys-trending",
-      title: "Trending",
-      feed_items: trending.map((s, i) => ({ id: s.id, order_index: i, song: s })),
-    });
-
-    //  New Releases
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    let newReleases = await prisma.song.findMany({
-      where: {
-        created_at: { gte: sevenDaysAgo }, //  กรองเพลงที่สร้างหลังจาก 7 วันก่อน
-      },
-      orderBy: { created_at: "desc" },
-      include: { uploader: true, stat: true, song_tags: { include: { tag: true } } },
-    });
-
-    // สร้าง seen ใหม่สำหรับ section นี้
-    const newReleasesSeen = new Set<number>();
-    newReleases = filterUniqueBySection(newReleases, newReleasesSeen);
-
-    // สุ่มลำดับ (optional)
-    newReleases = shuffleArraySeed(newReleases, todaySeed).slice(0, 10);
-
-    if (newReleases.length) sections.push({
-      id: "sys-new",
-      title: "New Releases",
-      feed_items: newReleases.map((s, i) => ({ id: s.id, order_index: i, song: s })),
-    });
-
-    // Recommended (history-based)
-    if (session?.user?.id) {
-      const history = await prisma.listeningHistory.findMany({
-        where: { user_id: session.user.id },
-        orderBy: { listened_at: "desc" },
-        take: 20,
-        include: { song: { include: { song_tags: { include: { tag: true } }, uploader: true, stat: true } } },
+      // หา top tags ทั้งหมดใน DB
+      const topTags = await prisma.tag.findMany({
+        orderBy: { song_tags: { _count: "desc" } },
+        take: 10,
       });
 
-      const favTags = history.flatMap(h => h.song.song_tags.map(st => st.tag.name_tag)).slice(0, 5);
-      if (favTags.length) {
-        let pool = await prisma.song.findMany({
-          where: { song_tags: { some: { tag: { name_tag: { in: favTags } } } }, listeningHistories: { none: { user_id: session.user.id } } },
+      // สุ่ม 2-3 tags
+      const numTags = 3;
+      const pickedTags: typeof topTags = [];
+      for (let i = 0; i < numTags; i++) {
+        const tag = topTags[(todaySeed + i) % topTags.length];
+        if (tag) pickedTags.push(tag);
+      }
+
+      const genreSongs: any[] = [];
+      const songsPerTag = Math.ceil(10 / pickedTags.length); // แบ่งเพลงให้ครบ 10
+
+      for (const tag of pickedTags) {
+        const songs = await prisma.song.findMany({
+          where: { song_tags: { some: { tag_id: tag.id } } },
           include: { uploader: true, stat: true, song_tags: { include: { tag: true } } },
+          take: songsPerTag,
         });
-        const recommendedSeen = new Set<number>();
-        pool = filterUniqueBySection(pool, recommendedSeen);
-        pool = shuffleArraySeed(pool, todaySeed).slice(0, 10);
-        if (pool.length) sections.push({
-          id: "sys-recommended",
-          title: "Recommended For You",
-          feed_items: pool.map((s, i) => ({ id: s.id, order_index: i, song: s })),
+        genreSongs.push(...songs);
+      }
+
+      // shuffle และ slice 10 เพลง
+      const finalSongs = shuffleArraySeed(genreSongs, todaySeed).slice(0, 10);
+
+      if (finalSongs.length) {
+        sections.push({
+          id: "sys-genre-explore",
+          title: `Explore ${pickedTags.map(t => t.name_tag).join(", ")}`,
+          description: `Discover songs from popular tags`,
+          feed_items: finalSongs.map((s, i) => ({ id: s.id, order_index: i, song: s })),
         });
       }
     }
 
-//     //  AI Picks
-//     if (session?.user?.id) {
-//       const history = await prisma.listeningHistory.findMany({
-//         where: { user_id: session.user.id },
-//         orderBy: { listened_at: "desc" },
-//         take: 20,
-//         include: { song: { include: { song_tags: { include: { tag: true } }, uploader: true, stat: true } } },
-//       });
 
-//       const favTags = [...new Set(history.flatMap(h => h.song.song_tags.map(st => st.tag.name_tag)))];
 
-//       if (favTags.length) {
-//         const pool = await prisma.song.findMany({
-//           where: { song_tags: { some: { tag: { name_tag: { in: favTags } } } } },
-//           include: { uploader: true, stat: true, song_tags: { include: { tag: true } } },
-//         });
+    // ====================
+    // Section: Recommended
+    // ====================
+    if (userId && (likedSongs.length || historySongs.length)) {
+      const tagFreq: Record<string, number> = {};
+      [...likedSongs, ...historySongs].forEach((s) =>
+        s.song.song_tags.forEach(
+          (st) => (tagFreq[st.tag.name_tag] = (tagFreq[st.tag.name_tag] || 0) + 1)
+        )
+      );
 
-//         const autoPrompt = `Generate a personalized feed for user ${session.user.id} based on their listening history and favorite tags. 
-// Select songs that are similar in style or mood to the songs they've recently listened to.`;
+      const topTags = Object.entries(tagFreq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([tag]) => tag);
 
-//         const aiResult = await generateAIPlaylist(autoPrompt, pool);
+      if (topTags.length) {
+        let pool = await prisma.song.findMany({
+          where: {
+            song_tags: { some: { tag: { name_tag: { in: topTags } } } },
+            listeningHistories: { none: { user_id: userId } },
+          },
+          include: { uploader: true, stat: true, song_tags: { include: { tag: true } } },
+          take: 50,
+        });
 
-//         const aiSongs = pool.filter((s) => aiResult.playlist.map(String).includes(String(s.id)));
-//         if (aiSongs.length) {
-//           sections.push({
-//             id: "sys-ai",
-//             title: "🤖 AI Picks",
-//             description: aiResult.reason,
-//             feed_items: aiSongs.map((s, i) => ({ id: s.id, order_index: i, song: s })),
-//           });
-//         }
-//       }
-//     }
+        const scoredPool = pool.map((song) => ({
+          song,
+          score: song.song_tags.reduce((acc, st) => acc + (tagFreq[st.tag.name_tag] || 0), 0),
+        }));
 
-    //  DB Sections
-    const dbSections = await prisma.feedSection.findMany({
-      include: { feed_items: { include: { song: { include: { uploader: true, stat: true } } } } },
-    });
-    const dbSectionsFiltered = dbSections.map(sec => {
-      const sectionSeen = new Set<number>();
+        scoredPool.sort((a, b) => b.score - a.score);
+        const recommendedSongs = shuffleArraySeed(
+          scoredPool.slice(0, 10).map((p) => p.song),
+          todaySeed
+        );
+
+        if (recommendedSongs.length) {
+          sections.push({
+            id: "sys-recommended",
+            title: "Recommended For You",
+            feed_items: recommendedSongs.map((s, i) => ({ id: s.id, order_index: i, song: s })),
+          });
+        }
+      }
+    }
+
+    // ====================
+    // Section: New Releases
+    // ====================
+    let newReleaseList = filterUnique(newReleases, new Set<number>());
+    newReleaseList = shuffleArraySeed(newReleaseList, todaySeed).slice(0, 10);
+    if (newReleaseList.length) {
+      sections.push({
+        id: "sys-new",
+        title: "New Releases",
+        feed_items: newReleaseList.map((s, i) => ({ id: s.id, order_index: i, song: s })),
+      });
+    }
+
+
+
+    // ====================
+    // Section: DB Custom Sections
+    // ====================
+    const dbSectionsFiltered = dbSections.map((sec) => {
+      const seen = new Set<number>();
       return {
         ...sec,
-        feed_items: filterUniqueBySection(sec.feed_items.map(fi => fi.song), sectionSeen)
-          .map((s, i) => ({ id: s.id, order_index: i, song: s })),
+        feed_items: filterUnique(sec.feed_items.map((fi) => fi.song), seen).map((s, i) => ({
+          id: s.id,
+          order_index: i,
+          song: s,
+        })),
       };
     });
-    sections = [...sections, ...dbSectionsFiltered];
 
-    return NextResponse.json({ sections });
-
+    return NextResponse.json({ sections: [...sections, ...dbSectionsFiltered] });
   } catch (err) {
     console.error("Fetch sections failed:", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

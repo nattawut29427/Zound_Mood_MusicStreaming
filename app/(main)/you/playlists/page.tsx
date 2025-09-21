@@ -24,35 +24,37 @@ export default async function SongDetailPage() {
   });
 
   if (!playlists || playlists.length === 0) {
-    return <div className="text-white">No playlists found</div>;
+    return <div className="flex items-center justify-center font-bold h-1/2 text-white">
+      No playlists found
+    </div>
   }
 
   return (
     <>
-    <div className="p-10 space-y-10">
-      <h1 className="text-white font-bold text-4xl">Your Playlists</h1>
-    </div>
-    <div className="grid lg:grid-cols-6 px-10 gap-x-10 gap-y-6">
-      {playlists.map((playlist) => (
+      <div className="p-10 space-y-10">
+        <h1 className="text-white font-bold text-4xl">Your Playlists</h1>
+      </div>
+      <div className="grid lg:grid-cols-6 px-10 gap-x-10 gap-y-6">
+        {playlists.map((playlist) => (
           <Link key={playlist.id} href={`/you/playlists/${playlist.id}`}>
-          <div className="rounded-lg cursor-pointer hover:opacity-80 transition p-2">
-            <PlaylistCover
-              picture={playlist.pic_playlists ?? ""}
-              name={playlist.name_playlist}
-              
+            <div className="rounded-lg cursor-pointer hover:opacity-80 transition p-2">
+              <PlaylistCover
+                picture={playlist.pic_playlists ?? ""}
+                name={playlist.name_playlist}
+
               />
-            <figcaption className="pt-2 text-xs text-muted-foreground">
-              <span className="font-bold text-md text-white">
-                {playlist.name_playlist}
-              </span>
-              <p className="text-md font-semibold text-muted-foreground">
-                By : {playlist.user.name}
-              </p>
-            </figcaption>
-          </div>
-        </Link>
-      ))}
-    </div>
+              <figcaption className="pt-2 text-xs text-muted-foreground">
+                <span className="font-bold text-md text-white">
+                  {playlist.name_playlist}
+                </span>
+                <p className="text-md font-semibold text-muted-foreground">
+                  By : {playlist.user.name}
+                </p>
+              </figcaption>
+            </div>
+          </Link>
+        ))}
+      </div>
     </>
   );
 }

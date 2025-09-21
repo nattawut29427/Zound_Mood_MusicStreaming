@@ -32,7 +32,7 @@ export default async function PlaylistDetailPage({
   });
 
   if (!playlist) {
-    return <div className="text-white">ไม่พบ Playlist</div>;
+    return <div className="text-white text-center">ไม่พบ Playlist</div>;
   }
 
   // ดึง array ของ Song objects ออกมาจาก playlist_songs

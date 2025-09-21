@@ -8,6 +8,7 @@ import Link from "next/link";
 import { generateUserSlug } from "@/lib/slug";
 import { useSignedImage } from "@/lib/hooks/useSignedImage";
 import { useEffect, useState } from "react";
+import Search from "@/components/Header/Search"
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -29,11 +30,7 @@ export default function Header() {
       </div>
 
       <div className="flex-1 max-w-lg ml-40 pt-2.5">
-        <input
-          type="text"
-          placeholder="Type your song..."
-          className="w-full h-10 px-4 rounded-full bg-white text-black placeholder-gray-400 focus:outline-none"
-        />
+       <Search/>
       </div>
 
       <div className="flex items-center space-x-4">
@@ -67,7 +64,7 @@ export default function Header() {
           >
             <Image
               key={signedAvatar} // รีโหลดรูปเมื่อ URL เปลี่ยน
-              src={signedAvatar || "/default-avatar.jpg"}
+              src={signedAvatar || "/2.jpg"}
               alt="avatar"
               width={30}
               height={30}
