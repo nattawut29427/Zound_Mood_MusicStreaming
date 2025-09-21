@@ -75,21 +75,29 @@ export function DiaryModal({
 
   // Like diary
   const toggleLike = async () => {
-    if (!session?.user || liked) return;
+    if (!session?.user) return;
+
     setLoading(true);
     try {
+      const action = liked ? "unlike" : "like";  // ถ้าชอบแล้ว → unlike, ถ้ายังไม่ชอบ → like
       const res = await fetch("/api/playsongDiary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ diaryId: diary.id, action: "like" }),
+        body: JSON.stringify({ diaryId: diary.id, action }),
       });
       const data = await res.json();
-      if (res.ok && data.liked) {
-        setLiked(true);
-        setLikes((prev) => prev + 1);
+
+      if (res.ok) {
+        if (action === "like" && data.liked) {
+          setLiked(true);
+          setLikes((prev) => prev + 1);
+        } else if (action === "unlike" && data.unliked) {
+          setLiked(false);
+          setLikes((prev) => Math.max(prev - 1, 0));
+        }
       }
     } catch (err) {
-      console.error("Failed to like diary", err);
+      console.error("Failed to toggle like diary", err);
     } finally {
       setLoading(false);
     }

@@ -44,7 +44,7 @@ import { useCursorVisibility } from "@/hooks/use-cursor-visibility";
 import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle";
 import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils";
 
-import LoadingOverlay from "@/components/Loadingoveray/page"; // 👈 overlay spinner
+import LoadingOverlay from "@/components/Loadingoveray/page"; //  overlay spinner
 
 import "@/components/tiptap-templates/simple/simple-editor.scss";
 
@@ -136,7 +136,7 @@ export function SimpleEditor() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const [isPrivate, setIsPrivate] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false); // 👈 overlay state
+  const [isSaving, setIsSaving] = React.useState(false); //  overlay state
 
   const isMobile = useIsMobile();
   const windowSize = useWindowSize();
@@ -206,8 +206,8 @@ export function SimpleEditor() {
     if (!editor || !userId) return;
 
     const title = getTitleFromEditor();
-    if (!title) { alert("❌ กรุณาใส่หัวข้อ H1 เป็นชื่อไดอารี่"); return; }
-    if (!selectedMusic) { alert("❌ กรุณาเลือกเพลงและช่วงเวลาตัด"); return; }
+    if (!title) { alert(" กรุณาใส่หัวข้อ H1 เป็นชื่อไดอารี่"); return; }
+    if (!selectedMusic) { alert(" กรุณาเลือกเพลงและช่วงเวลาตัด"); return; }
 
     try {
       setIsSaving(true); // 🔥 overlay start
@@ -222,7 +222,7 @@ export function SimpleEditor() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) { alert("❌ ตัดเพลงไม่สำเร็จ: " + data.message); return; }
+      if (!res.ok) { alert("❌\ ตัดเพลงไม่สำเร็จ: " + data.message); return; }
 
       const trimmedAudioUrl = data.url;
       const saveRes = await fetch("/api/dairy", {
@@ -239,14 +239,14 @@ export function SimpleEditor() {
       });
 
       if (saveRes.ok) {
-        alert("✅ บันทึกสำเร็จ");
+        alert(" บันทึกสำเร็จ");
         editor.commands.clearContent();
         setSelectedMusic(null);
       } else {
-        alert("❌ เกิดข้อผิดพลาดขณะบันทึกไดอารี่");
+        alert("เกิดข้อผิดพลาดขณะบันทึกไดอารี่");
       }
     } catch (error) {
-      alert("❌ เกิดข้อผิดพลาด: " + String(error));
+      alert("เกิดข้อผิดพลาด: " + String(error));
     } finally {
       setIsSaving(false); 
     }

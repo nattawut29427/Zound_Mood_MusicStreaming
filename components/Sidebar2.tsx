@@ -211,46 +211,51 @@ export default function Sidebar2() {
 
   if (view === "createNewPlaylist") {
     return (
-      <div className="w-80 p-4 space-y-4 bg-gradient-to-t from-black to-[#252525] duration-200 h-full flex flex-col">
+      <div className="w-80 p-4 bg-gradient-to-t from-black to-[#252525] duration-200 h-full flex flex-col">
         <h2 className="text-xl font-bold pb-2">Create Playlist</h2>
 
-        <div className="flex flex-col items-center justify-center my-2 space-y-2">
-          <div className="space-y-4 w-48 h-fit rounded-lg">
-            <Createplaylist
-              picture={previewUrl}
-              name="preview"
-              onImageChange={handleImageUpload}
+        
+        <div className="flex-1 flex flex-col">
+          <div className="flex flex-col items-center justify-center my-2 space-y-2">
+            <div className="space-y-4 w-48 h-fit rounded-lg">
+              <Createplaylist
+                picture={previewUrl}
+                name="preview"
+                onImageChange={handleImageUpload}
+              />
+            </div>
+            <p className="w-full text-left mt-10 font-bold">Title playlist</p>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileChange}
             />
           </div>
+
           <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            className="hidden"
-            onChange={handleFileChange}
+            className="w-full p-2 rounded bg-neutral-700"
+            placeholder="Playlist name"
+            value={playlistName}
+            onChange={(e) => setPlaylistName(e.target.value)}
           />
+
+          {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
 
-        <input
-          className="w-full p-2 rounded bg-neutral-700"
-          placeholder="Playlist name"
-          value={playlistName}
-          onChange={(e) => setPlaylistName(e.target.value)}
-        />
-
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-
-        <div className="flex flex-col gap-3 mt-4">
+      
+        <div className="flex flex-col gap-3 mb-20">
           <button
             onClick={handleCreate}
-            className="w-full py-2 rounded-lg bg-white text-black font-semibold"
+            className="w-full py-2 rounded-lg bg-white text-black font-semibold cursor-pointer"
           >
             Create Playlist
           </button>
 
           <button
             onClick={() => setView("createPlaylist")}
-            className="w-full py-2 rounded-lg bg-zinc-700 text-white"
+            className="w-full py-2 rounded-lg bg-zinc-700 text-white cursor-pointer"
           >
             Back to Playlist
           </button>

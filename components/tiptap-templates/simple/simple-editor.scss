@@ -70,6 +70,20 @@ body,
   padding: 3rem 3rem;
 }
 
+/* ปิดกรอบ/outline เวลา focus */
+.tiptap.ProseMirror {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent; // กันพื้นหลังขาวโผล่มาด้วย
+}
+
+/* ถ้าอยากให้ตอน focus ยังมีกรอบ แต่เปลี่ยนเป็นสี theme ของคุณ */
+.tiptap.ProseMirror:focus {
+  outline: 2px solid var(--tt-gray-light-300); // หรือใช้สี violet ที่คุณชอบ
+  border-radius: 0.5rem;
+}
+
 @media screen and (max-width: 768px) {
   .simple-editor-content .tiptap.ProseMirror.simple-editor {
     padding: 1rem 1.5rem;
