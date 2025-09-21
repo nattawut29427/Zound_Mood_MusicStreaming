@@ -87,7 +87,16 @@ export default function Player() {
                   unoptimized
                 />
                 <div className="text-white">
-                  <p className="font-semibold">{currentTrack.name_song}</p>
+                   <div className="overflow-hidden w-full group">
+
+                  <span
+                    className={`block font-bold text-md text-white whitespace-nowrap ${currentTrack.name_song.length > 30 ? "group-hover:animate-marquee" : ""
+                      }`}
+                      >
+                    {currentTrack.name_song}
+                  </span>
+                    </div>
+                  
                   <p className="text-xs text-gray-400">
                     {currentTrack.uploader?.name}
                   </p>
@@ -117,9 +126,8 @@ export default function Player() {
           onChange={handleSeek}
           className="w-full h-1 m-auto rounded-lg appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #ffffff ${
-              (position / duration) * 100
-            }%, #6b7280 ${(position / duration) * 100}%)`,
+            background: `linear-gradient(to right, #ffffff ${(position / duration) * 100
+              }%, #6b7280 ${(position / duration) * 100}%)`,
             borderRadius: "999px",
           }}
         />
@@ -153,9 +161,8 @@ export default function Player() {
         />
         <Repeat
           onClick={toggleLoop}
-          className={`w-5 h-5 cursor-pointer transition-colors ${
-            isLooping ? "text-violet-600 " : "text-white"
-          } hover:text-violet-600 `}
+          className={`w-5 h-5 cursor-pointer transition-colors ${isLooping ? "text-violet-600 " : "text-white"
+            } hover:text-violet-600 `}
         />
       </div>
       <div className="flex items-center justify-end space-x-2 w-1/3 pr-4">
@@ -169,9 +176,8 @@ export default function Player() {
           onChange={handleVolumeChange}
           className="w-24 h-1 bg-red-500 rounded-lg appearance-auto cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #22c55e ${
-              (volume / 1) * 100
-            }%, #6b7280 ${(volume / 1) * 100}%)`,
+            background: `linear-gradient(to right, #22c55e ${(volume / 1) * 100
+              }%, #6b7280 ${(volume / 1) * 100}%)`,
             borderRadius: "999px",
           }}
         />

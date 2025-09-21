@@ -17,9 +17,9 @@ export default function SongCover({
   const [error, setError] = useState(false);
 
   return (
-    <div className="relative w-full h-full rounded overflow-hidden">
+    <div className="relative  h-full rounded overflow-hidden">
       {loading && !error && (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
+        <div className="absolute inset-0 flex items-center justify-center z-50">
           <Loading />
         </div>
       )}

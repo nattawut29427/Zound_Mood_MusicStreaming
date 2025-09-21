@@ -12,7 +12,7 @@ export default function LikedSongsClient({
   const { playSong, stop, currentTrack, isPlaying } = usePlayer();
 
   if (!likedSongs || likedSongs.length === 0) {
-    return <div className="text-white">You haven’t liked any songs yet.</div>;
+    return <div className="flex items-center justify-center h-1/2 text-white">You haven’t liked any songs yet.</div>;
   }
 
   return (

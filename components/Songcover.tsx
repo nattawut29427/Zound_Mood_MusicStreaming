@@ -80,7 +80,7 @@
                   setLoading(false);
                   setError(true);
                 }}
-                style={{ zIndex: 10, pointerEvents: "none" }}
+                style={{ zIndex: 0, pointerEvents: "none" }}
               />
             )}
 
@@ -105,7 +105,7 @@
             </div>
 
             {/* พื้นหลังมืดตอน hover */}
-            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-60 transition z-20 pointer-events-none duration-300" />
+            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-60 transition z-10 pointer-events-none duration-300" />
 
             {/* ปุ่ม Upload รูป */}
             {onImageChange && (
