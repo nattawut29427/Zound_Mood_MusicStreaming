@@ -49,7 +49,7 @@ export default function DeleteSongButton({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="p-2 mt-4 rounded-md hover:bg-red-700 transition-colors flex gap-2 items-center">
+        <button className="p-2 mt-4 rounded-md hover:bg-red-700 transition-colors flex gap-2 items-center cursor-pointer">
           <Trash2 className="w-5 h-5" />
           Delete Song
         </button>
@@ -72,12 +72,7 @@ export default function DeleteSongButton({
         />
 
         <DialogFooter className="flex justify-end gap-2 mt-4">
-          <Button
-            variant="outline"
-            onClick={() => setInput("")}
-          >
-            Cancel
-          </Button>
+          
           <Button
             className="bg-red-600 hover:bg-red-700 text-white"
             disabled={input !== songName || loading}

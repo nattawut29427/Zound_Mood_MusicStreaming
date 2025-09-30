@@ -113,7 +113,7 @@ export default function SongDetailClient({
         </div>
 
         {/* คำอธิบาย */}
-        <div className="flex-1 bg-gradient-to-b from-neutral-800 to-neutral-900 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+        <div className="flex-1 bg-gradient-to-b from-neutral-800 to-neutral-900 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 mb-10">
           <h2 className="text-2xl font-bold mb-4 text-white">Description</h2>
           <section className="text-gray-300 leading-relaxed whitespace-pre-line">
             {song.description || "No description provided."}

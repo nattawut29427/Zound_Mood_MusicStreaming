@@ -117,7 +117,7 @@ export default function ShortSongModal({
                 className="block rounded-lg hover:opacity-80 transition"
               >
                 <button
-                  className="px-2 py-1 bg-white text-black rounded-full text-xs md:text-sm"
+                  className="px-2 py-1 bg-white text-black rounded-full text-xs md:text-sm cursor-pointer"
                   onClick={() => {
                     stop();
                     onClose();

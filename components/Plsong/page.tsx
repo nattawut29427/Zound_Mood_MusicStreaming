@@ -48,7 +48,7 @@ export default function SongRow({ song, index, playlistId, songs }: SongRowProps
       </div>
 
       {/* Delete Button */}
-      <div className="col-span-1 flex justify-center">
+      <div className="col-span-1 mr-12 flex justify-center">
         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:text-red-500">
           <Delpl playlistIdToDelete={playlistId} songId={song.id}  />
         </span>

@@ -33,12 +33,12 @@ export default function SongDetailControls({ song }: Props) {
       {isCurrentSongPlaying ? (
         <PauseCircle
           onClick={handleClick}
-          className="w-12 h-12 text-blue-500 cursor-pointer transition-transform duration-200 scale-110"
+          className="w-12 h-12 text-violet-600 cursor-pointer transition-transform duration-200 scale-110"
         />
       ) : (
         <CirclePlay
           onClick={handleClick}
-          className="w-12 h-12 text-white hover:text-blue-500 cursor-pointer"
+          className="w-12 h-12 text-white hover:text-violet-600 cursor-pointer"
         />
       )}
     </div>

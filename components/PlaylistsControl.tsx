@@ -89,16 +89,16 @@ export default function PlaylistDetailControls({
         disabled={songs.length === 0}
       >
         {isThisPlaylistLoadedInQueue && isPlaying ? (
-          <PauseCircle className="w-12 h-12  text-blue-500 cursor-pointer transition-transform duration-200 scale-110" />
+          <PauseCircle className="w-12 h-12  text-violet-600 cursor-pointer transition-transform duration-200 scale-110" />
         ) : (
-          <CirclePlay className="w-12 h-12 text-blue-500 cursor-pointer transition-transform duration-200 scale-110" />
+          <CirclePlay className="w-12 h-12 text-violet-600 cursor-pointer transition-transform duration-200 scale-110" />
         )}
       </button>
 
       {/* ปุ่ม Shuffle Playlist */}
       <button
         onClick={handleShufflePlay}
-        className="flex items-center justify-center p-3 rounded-full bg-neutral-700 text-white hover:bg-neutral-600 transition-colors"
+        className="flex items-center justify-center p-3 rounded-full bg-neutral-700 text-white hover:bg-neutral-600 transition-colors cursor-pointer"
         aria-label="Shuffle play"
         disabled={songs.length === 0}
       >

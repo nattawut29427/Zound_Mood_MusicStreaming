@@ -13,8 +13,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import TextareaAutosize from "react-textarea-autosize";
-import { Pencil } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import SongCover from "@/components/Songcover";
+import { Badge } from "@/components/ui/badge";
 
 export default function EditSongButton({
     song,
@@ -28,7 +29,10 @@ export default function EditSongButton({
     };
 }) {
     const [name, setName] = useState(song.name_song);
-    const [tags, setTags] = useState(song.song_tags.map((t) => t.name_tag).join(", "));
+    const [tags, setTags] = useState<string[]>(
+        song.song_tags.map((t) => t.name_tag)
+    );
+    const [tagInput, setTagInput] = useState("");
     const [description, setDescription] = useState(song.description || "");
     const [editPreviewUrl, setEditPreviewUrl] = useState(song.picture || "");
     const [editImageFile, setEditImageFile] = useState<File | null>(null);
@@ -38,7 +42,6 @@ export default function EditSongButton({
         try {
             const picKey = `pictures/${Date.now()}_${file.name}`;
 
-            // ขอ signed URL
             const picUrlRes = await fetch(
                 `/api/upload?key=${encodeURIComponent(
                     picKey
@@ -48,7 +51,6 @@ export default function EditSongButton({
 
             const { url: picUploadUrl } = await picUrlRes.json();
 
-            // PUT รูปไปยัง Cloudflare R2
             const picUploadRes = await fetch(picUploadUrl, {
                 method: "PUT",
                 headers: { "Content-Type": file.type },
@@ -56,7 +58,7 @@ export default function EditSongButton({
             });
             if (!picUploadRes.ok) throw new Error("อัปโหลดรูปภาพล้มเหลว");
 
-            return picKey; // คืนค่า key เพื่อเก็บใน DB
+            return picKey;
         } catch (err: any) {
             console.error("Upload picture failed:", err);
             throw err;
@@ -78,7 +80,7 @@ export default function EditSongButton({
                     name_song: name,
                     description,
                     picture: pictureUrl,
-                    song_tags: tags.split(",").map((t) => t.trim()),
+                    song_tags: tags,
                 }),
             });
 
@@ -89,6 +91,30 @@ export default function EditSongButton({
             console.error(err);
             alert("Failed to update song");
         }
+    };
+
+    // ✅ เพิ่มแท็กด้วย Enter/Space
+    const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if ((e.key === "Enter" || e.key === " ") && tagInput.trim() !== "") {
+            e.preventDefault();
+            if (!tags.includes(tagInput.trim())) {
+                setTags([...tags, tagInput.trim()]);
+            }
+            setTagInput("");
+        }
+
+        // Backspace ลบ tag ล่าสุด
+        if (e.key === "Backspace" && tagInput === "" && tags.length > 0) {
+            e.preventDefault();
+            const newTags = [...tags];
+            const lastTag = newTags.pop();
+            setTags(newTags);
+            if (lastTag) setTagInput(lastTag);
+        }
+    };
+
+    const removeTag = (tag: string) => {
+        setTags(tags.filter((t) => t !== tag));
     };
 
     return (
@@ -120,17 +146,43 @@ export default function EditSongButton({
                     </div>
 
                     <div>
-                        <Label htmlFor="name" className="font-bold">Name song</Label>
+                        <Label htmlFor="name" className="font-bold mb-2">Name song</Label>
                         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
 
-                    <div>
-                        <Label htmlFor="tag" className="font-bold">Tag</Label>
-                        <Input id="tag" value={tags} onChange={(e) => setTags(e.target.value)} />
-                    </div>
 
                     <div>
-                        <Label htmlFor="description" className="font-bold">Description</Label>
+                        <Label htmlFor="tag" className="font-bold mb-2">Tags</Label>
+                        <div className="flex flex-wrap items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                            {tags.map((tag, i) => (
+                                <Badge
+                                    key={i}
+                                    variant="secondary"
+                                    className="flex items-center gap-1 px-3 py-1 rounded-full"
+                                >
+                                    {tag}
+                                    <X
+                                        size={14}
+                                        className="cursor-pointer hover:text-red-400"
+                                        onClick={() => removeTag(tag)}
+                                    />
+                                </Badge>
+                            ))}
+                            <input
+                                id="tag"
+                                type="text"
+                                placeholder="Type and press space/enter..."
+                                className="flex-1 bg-transparent outline-none text-black placeholder-gray-400 min-w-[100px]"
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={handleTagKeyDown}
+                            />
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <Label htmlFor="description" className="font-bold mb-2">Description</Label>
                         <TextareaAutosize
                             id="description"
                             value={description}

@@ -174,7 +174,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         if (queue.length > 0) playNext();
         else if (isAutoContinue && currentTrack) {
           try {
-            const res = await fetch(`/api/recommend?songId=${currentTrack.id}`);
+            const res = await fetch(`/api/service/recommend?songId=${currentTrack.id}`);
             if (!res.ok) return;
             const nextSong = await res.json();
             if (nextSong?.id && nextSong.id !== currentTrack.id) playSong(nextSong);
