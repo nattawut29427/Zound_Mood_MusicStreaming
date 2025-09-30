@@ -42,7 +42,7 @@ export async function uploadImageToR2(file: File): Promise<string> {
     const safeName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`;
     const pictureKey = `pictures/${safeName}`;
 
-    // ✅ ใช้ absolute URL สำหรับ server-side
+    //  ใช้ absolute URL สำหรับ server-side
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     const signedUrlRes = await fetch(

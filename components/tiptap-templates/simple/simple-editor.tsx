@@ -225,7 +225,7 @@ export function SimpleEditor() {
       if (!res.ok) { alert("❌\ ตัดเพลงไม่สำเร็จ: " + data.message); return; }
 
       const trimmedAudioUrl = data.url;
-      const saveRes = await fetch("/api/dairy", {
+      const saveRes = await fetch("/api/service/Diary/diary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

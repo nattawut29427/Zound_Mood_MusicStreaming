@@ -103,7 +103,7 @@ export default function Page() {
       });
 
       // บันทึกข้อมูลเพลง
-      const saveRes = await fetch("/api/upload", {
+      const saveRes = await fetch("/api/service/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

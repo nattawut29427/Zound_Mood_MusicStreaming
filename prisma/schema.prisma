@@ -249,7 +249,7 @@ model DiaryStat {
   diary_id   Int    @id
   view_count Int    @default(0)
   like_count Int    @default(0)
-
+ 
   diary      Diary  @relation(fields: [diary_id], references: [id]) 
 }
 

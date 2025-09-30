@@ -49,7 +49,7 @@ export function DiaryModal({
 
     const fetchLikeAndView = async () => {
       try {
-        const res = await fetch(`/api/diarylike?diaryId=${diary.id}`);
+        const res = await fetch(`/api/service/Diary/diarylike?diaryId=${diary.id}`);
         const data = await res.json();
         setLiked(data.liked);
         setLikes(data.likes);

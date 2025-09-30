@@ -88,7 +88,7 @@ const AuthPage = () => {
 
       if (isRegister) {
         // Register
-        const res = await fetch("/api/singup", {
+        const res = await fetch("/api/service/singup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password }),

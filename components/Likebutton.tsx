@@ -25,7 +25,7 @@ export default function LikeButton({
     setLoading(true);
 
     try {
-      const res = await fetch("/api/like", {
+      const res = await fetch("/api/song/like", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ song_id: songId }),

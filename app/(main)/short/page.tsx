@@ -187,7 +187,7 @@ export default function ShortSongPage({
     };
 
     return (
-        <div className="flex flex-col text-white h-full bg-zinc-900 rounded-lg">
+        <div className="flex flex-col text-white h-full bg-zinc-900 ">
             <h2 className="text-lg font-bold p-4">เลือก Short Song ของคุณ</h2>
 
             {/* Song List */}

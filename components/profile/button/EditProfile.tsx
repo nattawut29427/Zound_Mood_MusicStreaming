@@ -66,13 +66,16 @@ export default function EditUserButton({
             });
             if (!res.ok) throw new Error("Update failed");
 
-            // รีเฟรช session
+
             await mutate("/api/auth/session"); // reload session ใหม่
 
             alert("User updated successfully!");
         } catch (err) {
-            console.error(err);
-            alert("Failed to update user");
+            if (name == "") {
+                alert("กรุณาใส่ชื่อผู้ใช้");
+            } else {
+                alert("Update failed")
+            }
         }
     };
 

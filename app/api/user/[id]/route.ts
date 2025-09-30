@@ -75,7 +75,7 @@ export async function GET(
     playlists: user.playlists,
     likesongs: user.likesongs,
     listeningHistories: user.listeningHistories,
-    shortSongs: user.shortSongs, // ✅ ส่ง shortSongs ออกมาด้วย
+    shortSongs: user.shortSongs, //  ส่ง shortSongs ออกมาด้วย
   });
 }
 
@@ -134,6 +134,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   try {
     const body = await req.json();
     const { name, image, } = body;
+
+    if (!name || name.trim() === "") {
+      return NextResponse.json(
+        { error: "กรุณาใส่ชื่อผู้ใช้ก่อน" },
+        { status: 400 }
+      );
+    }
 
     // อัปเดต user
     const updatedUser = await prisma.user.update({

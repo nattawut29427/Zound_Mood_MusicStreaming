@@ -32,7 +32,7 @@ const AIGenPage = () => {
     setError("");
 
     try {
-      const res = await fetch("/api/generate-playlist", {
+      const res = await fetch("/api/service/generate-playlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, songs }),

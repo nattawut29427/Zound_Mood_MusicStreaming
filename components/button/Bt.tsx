@@ -19,7 +19,7 @@ export default function FollowUserWrapper({
     setLoading(true);
 
     try {
-      const response = await fetch("/api/follow", {
+      const response = await fetch("/api/service/follow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: userIdToFollow, follow: !isFollowing }),

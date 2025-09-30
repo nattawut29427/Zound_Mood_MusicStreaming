@@ -122,7 +122,7 @@ export default function DiaryPage() {
   // เพิ่ม view diary
   async function incrementDiaryView(diaryId: number) {
     try {
-      await fetch("/api/diary/view", {
+      await fetch("/api/service/Diary/diary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ diaryId }),
@@ -194,13 +194,13 @@ export default function DiaryPage() {
                 key={diary.id}
                 diary={diary}
                 onClick={() => {
-                  incrementDiaryView(diary.id);
+                
                   playDiary(diary);
                   setSelectedDiary(diary);
                   setIsOpen(true);
                 }}
                 onExpand={() => {
-                  incrementDiaryView(diary.id);
+               
                   playDiary(diary);
                   setSelectedDiary(diary);
                   setIsOpen(true);

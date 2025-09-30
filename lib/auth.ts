@@ -59,7 +59,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id.toString();
       }
 
-      // ✅ ดึงรูปจาก Google profile และเก็บใน token.picture
+      //  ดึงรูปจาก Google profile และเก็บใน token.picture
       if (account?.provider === "google" && profile) {
         const googleProfile = profile as any;
         token.picture = googleProfile.picture;
@@ -74,7 +74,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
 
         // โหลด user จาก database เพื่อดึงรูปล่าสุด
-        const dbUser = await prisma.user.findUnique({ where: { id: token.id } });
+        const dbUser = await prisma.user.findUnique({ where: { id: token.id as string } });
         if (dbUser) {
           session.user.image = dbUser.image || session.user.image;
           session.user.username = dbUser.name || session.user.username;
