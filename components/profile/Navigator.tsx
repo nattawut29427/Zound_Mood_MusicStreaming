@@ -89,7 +89,12 @@ export default function Navigator({ userId }: NavigatorProps) {
   }
 
   const tabs: Record<TabName, any[]> = {
-    Popular: userData.songs || [],
+    Popular: (userData.songs || [])
+      .slice()
+      .sort(
+        (a, b) =>
+          (b.SongStat?.play_count || 0) - (a.SongStat?.play_count || 0)
+      ),
     Track: userData.songs || [],
     Playlist: userData.playlists || [],
     Like: userData.likesongs || [],
@@ -105,8 +110,8 @@ export default function Navigator({ userId }: NavigatorProps) {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`cursor-pointer ${activeTab === tab
-                ? "border-b-2 border-purple-600 text-white"
-                : "text-gray-500 hover:text-purple-500"
+              ? "border-b-2 border-purple-600 text-white"
+              : "text-gray-500 hover:text-purple-500"
               }`}
           >
             {tab}

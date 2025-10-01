@@ -47,6 +47,7 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils";
 import LoadingOverlay from "@/components/Loadingoveray/page"; //  overlay spinner
 
 import "@/components/tiptap-templates/simple/simple-editor.scss";
+import { useSidebar } from "@/app/context/SidebarContext";
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -137,6 +138,7 @@ export function SimpleEditor() {
   const userId = session?.user?.id;
   const [isPrivate, setIsPrivate] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false); //  overlay state
+  const { setView, } = useSidebar();
 
   const isMobile = useIsMobile();
   const windowSize = useWindowSize();
@@ -248,7 +250,7 @@ export function SimpleEditor() {
     } catch (error) {
       alert("เกิดข้อผิดพลาด: " + String(error));
     } finally {
-      setIsSaving(false); 
+      setIsSaving(false);
     }
   };
 
@@ -287,20 +289,40 @@ export function SimpleEditor() {
       </EditorContext.Provider>
 
       <div className="p-4 border-t border-zinc-700 flex justify-between items-center">
-        <div
-          onClick={() => setIsPrivate(!isPrivate)}
-          className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition ${isPrivate ? "bg-indigo-600" : "bg-gray-500"}`}
-        >
-          <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition ${isPrivate ? "translate-x-7" : "translate-x-0"}`}></div>
+        {/* Group ซ้าย */}
+        <div className="flex items-center gap-3">
+          <div
+            onClick={() => setIsPrivate(!isPrivate)}
+            className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition ${isPrivate ? "bg-indigo-600" : "bg-gray-500"
+              }`}
+          >
+            <div
+              className={`bg-white w-5 h-5 rounded-full shadow-md transform transition ${isPrivate ? "translate-x-7" : "translate-x-0"
+                }`}
+            ></div>
+          </div>
+          <span className="text-white">
+            {isPrivate ? "Private (ส่วนตัว)" : "Public (สาธารณะ)"}
+          </span>
         </div>
-        <span className="text-white">{isPrivate ? "Private (ส่วนตัว)" : "Public (สาธารณะ)"}</span>
-        <button
-          onClick={handleSubmit}
-          className="py-3 px-6 cursor-pointer rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition"
-          type="button"
-        >
-          {isSaving ? "กำลังบันทึก..." : "บันทึกไดอารี่"}
-        </button>
+
+        {/* Group ขวา */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setView(null)}
+            className="py-2 px-5 cursor-pointer rounded-lg bg-zinc-600 hover:bg-zinc-700 text-white font-semibold transition"
+            type="button"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="py-2 px-5 cursor-pointer rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition"
+            type="button"
+          >
+            {isSaving ? "กำลังบันทึก..." : "บันทึกไดอารี่"}
+          </button>
+        </div>
       </div>
     </div>
   );

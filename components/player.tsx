@@ -74,7 +74,7 @@ export default function Player() {
       {/* ที่เเสดงชื่อเพลง */}
 
       <Link href={`/viewsongs/${currentTrack?.id}`} className="w-1/3">
-        <div className="flex items-center cursor-pointer space-x-4 pl-4">
+        <div className="flex items-center cursor-pointer space-x-4 pl-4 w-full">
           {currentTrack ? (
             signedUrl ? (
               <>
@@ -86,18 +86,16 @@ export default function Player() {
                   className="rounded-md aspect-[4/4] object-cover"
                   unoptimized
                 />
-                <div className="text-white">
-                   <div className="overflow-hidden w-full group">
-
-                  <span
-                    className={`block font-bold text-md text-white whitespace-nowrap ${currentTrack.name_song.length > 30 ? "group-hover:animate-marquee" : ""
-                      }`}
-                      >
-                    {currentTrack.name_song}
-                  </span>
-                    </div>
-                  
-                  <p className="text-xs text-gray-400">
+                <div className="  w-fit flex flex-col overflow-hidden">
+                  <div className="overflow-hidden w-fit">
+                    <span
+                      className={`block font-bold text-md text-white whitespace-nowrap truncate ${currentTrack.name_song.length > 30 ? "group-hover:animate-marquee" : ""
+                        }`}
+                    >
+                      {currentTrack.name_song}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 truncate">
                     {currentTrack.uploader?.name}
                   </p>
                 </div>

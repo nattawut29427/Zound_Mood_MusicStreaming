@@ -15,6 +15,11 @@ export interface Song {
   description?: string | null;
   uploaded_by: string;
   uploader?: Uploader | null;
+  SongStat: {
+    song_id: number;
+    play_count: number;
+    like_count: number;
+  }
 }
 
 export interface Diary {

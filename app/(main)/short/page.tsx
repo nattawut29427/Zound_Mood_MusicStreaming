@@ -7,7 +7,7 @@ import { useCachedSignedUrl } from "@/lib/hooks/useCachedSignedUrl";
 import { Song } from "@/components/types";
 import Smallpic from "@/components/cover_pic/Smallpic";
 import { useSession } from "next-auth/react";
-
+import LoadingSpinner from "@/components/loading/Loading";
 
 type UserData = {
     profileKey?: string;
@@ -18,6 +18,10 @@ type UserData = {
 // helper แปลงวินาที → mm:ss
 const formatTime = (time: number) =>
     new Date(time * 1000).toISOString().substr(14, 5);
+
+
+
+
 
 export default function ShortSongPage({
     onSelect,
@@ -47,7 +51,6 @@ export default function ShortSongPage({
     const signedUrl = useCachedSignedUrl(selectedSong?.audio_url);
 
 
-   
 
     //  โหลดเฉพาะเพลงของ user เอง
     useEffect(() => {
@@ -139,21 +142,21 @@ export default function ShortSongPage({
         if (!selectedSong) return setMessage("❌ กรุณาเลือกเพลงก่อน");
         if (!signedUrl) return setMessage("❌ กำลังโหลดไฟล์เพลง...");
 
-   const getR2KeyFromUrl = (url: string): string => {
-    try {
-        if (url.startsWith("http://") || url.startsWith("https://")) {
-            const pathname = new URL(url).pathname; // /storagemusic/songs/xxx.mp3
-            const key = pathname.replace(/^\/storagemusic\//, ""); // ลบ /storagemusic/ ข้างหน้า
-            return `storagemusic/${decodeURIComponent(key)}`;
-        }
-        return `storagemusic/${decodeURIComponent(url)}`;
-    } catch (e) {
-        console.error("Invalid URL for r2Key:", url, e);
-        return url;
-    }
-};
+        const getR2KeyFromUrl = (url: string): string => {
+            try {
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    const pathname = new URL(url).pathname; // /storagemusic/songs/xxx.mp3
+                    const key = pathname.replace(/^\/storagemusic\//, ""); // ลบ /storagemusic/ ข้างหน้า
+                    return `storagemusic/${decodeURIComponent(key)}`;
+                }
+                return `storagemusic/${decodeURIComponent(url)}`;
+            } catch (e) {
+                console.error("Invalid URL for r2Key:", url, e);
+                return url;
+            }
+        };
 
-    
+
         const r2KeyToSend = getR2KeyFromUrl(signedUrl);
 
         const lambdaRes = await fetch("/api/process-r2-audio", {
@@ -193,7 +196,9 @@ export default function ShortSongPage({
             {/* Song List */}
             <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
                 {songs.length === 0 && (
-                    <p className="text-gray-400 text-center">ยังไม่มีเพลงที่อัปโหลด</p>
+                    <div className="justify-center  m-20 flex">
+                        <LoadingSpinner />
+                    </div>
                 )}
                 {songs.map((song) => (
                     <div

@@ -157,57 +157,60 @@ export default function Sidebar2() {
 
 
   if (view === "createPlaylist") {
-    return (
-      <div className="w-80 p-4 space-y-4 bg-gradient-to-t from-black to-[#252525] duration-200 h-full flex flex-col">
-        <h2 className="text-xl font-bold pb-2">Add to Playlist</h2>
-
-        {/* Search Playlist */}
-        <div className="flex-shrink-0">
-          <input
-            type="text"
-            placeholder="ค้นหา Playlist..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-10 rounded-lg px-4 bg-zinc-800 text-white placeholder-gray-400 focus:outline-none"
-          />
-        </div>
-
-        {/* Playlist List */}
-        <div className="flex-1 overflow-y-auto space-y-2">
-          <Allplaylist
-            onSelectPlaylist={(id) => setExistingPlaylistId(id)}
-            selectedPlaylistId={existingPlaylistId}
-            search={search}
-          />
-        </div>
-
-        {/* Button Zone */}
-        <div className="flex flex-col gap-3 mt-4">
-          <button
-            onClick={handleAddToPlaylist}
-            disabled={!existingPlaylistId}
-            className="w-full py-2 rounded-lg bg-white text-black font-semibold disabled:opacity-40"
-          >
-            Add to Playlist
-          </button>
-
-          <button
-            onClick={() => setView("createNewPlaylist")}
-            className="w-full py-2 rounded-full bg-neutral-800 text-white border border-white"
-          >
-            Create New Playlist
-          </button>
-
-          <button
-            onClick={() => setView(null)}
-            className="w-full py-2 rounded-lg bg-zinc-700 text-white"
-          >
-            ❌ Cancel
-          </button>
-        </div>
+  return (
+    <div className="w-80 p-4 space-y-4 bg-gradient-to-t from-black to-[#252525] duration-200 h-full flex flex-col relative">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between pb-2">
+        <h2 className="text-xl font-bold">Add to Playlist</h2>
+        <button
+          onClick={() => setView(null)}
+          className="text-white hover:text-red-500 text-lg cursor-pointer"
+        >
+          ✖️
+        </button>
       </div>
-    );
-  }
+
+      {/* Search Playlist */}
+      <div className="flex-shrink-0">
+        <input
+          type="text"
+          placeholder="ค้นหา Playlist..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full h-10 rounded-lg px-4 bg-zinc-800 text-white placeholder-gray-400 focus:outline-none"
+        />
+      </div>
+
+      {/* Playlist List */}
+      <div className="flex-1 overflow-y-auto space-y-2">
+        <Allplaylist
+          onSelectPlaylist={(id) => setExistingPlaylistId(id)}
+          selectedPlaylistId={existingPlaylistId}
+          search={search}
+        />
+      </div>
+
+      {/* Button Zone */}
+      <div className="flex flex-col gap-3 mt-4 mb-20">
+        <button
+          onClick={handleAddToPlaylist}
+          disabled={!existingPlaylistId}
+          className="w-full py-2 rounded-lg bg-white text-black font-semibold disabled:opacity-40"
+        >
+          Add to Playlist
+        </button>
+
+        <button
+          onClick={() => setView("createNewPlaylist")}
+          className="w-full py-2 rounded-full bg-neutral-800 text-white border border-white"
+        >
+          Create New Playlist
+        </button>
+      </div>
+    </div>
+  );
+}
 
   if (view === "createNewPlaylist") {
     return (
