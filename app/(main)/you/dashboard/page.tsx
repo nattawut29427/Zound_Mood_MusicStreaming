@@ -5,6 +5,7 @@ import Mdpic from "@/components/cover_pic/Smpicrecent";
 import DashboardCard from "@/components/dashboard/DashCard";
 import { Play, Heart } from "lucide-react";
 import Link from "next/link";
+import LoadingSpinner from "@/components/loading/Loading";
 
 type TopSong = {
   id: number;
@@ -47,7 +48,9 @@ export default function Dashboard() {
       });
   }, []);
 
-  if (loading) return <div className="p-10">Loading...</div>;
+  if (loading) return <div className="justify-center items-center mt-20">
+          <LoadingSpinner />
+        </div>
   if (!data) return <div className="p-10">No data available</div>;
 
   // --- ฟังก์ชันจัดเรียง ---

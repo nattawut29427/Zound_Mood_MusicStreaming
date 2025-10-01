@@ -55,16 +55,7 @@ export default function SongCoverDropdown({
           Like
         </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onSelect={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            alert("Add to queue");
-          }}
-        >
-          Report
-        </DropdownMenuItem>
-
+  
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
@@ -74,7 +65,7 @@ export default function SongCoverDropdown({
             alert("Delete");
           }}
         >
-          Delete
+          Report
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
