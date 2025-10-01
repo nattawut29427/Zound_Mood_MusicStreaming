@@ -10,8 +10,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  
-  const publicPaths = ["/signin", "/register"];
+
+  const publicPaths = ["/signin", "/register" , ];
 
   // exclude API ของ next-auth ออก
   if (pathname.startsWith("/api/auth")) {
@@ -28,5 +28,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/auth|api/service/singup|api/service/reset-password).*)",
+  ],
 };
