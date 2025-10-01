@@ -7,7 +7,9 @@ import {
   BookOpen,
   Bot,
   Settings,
-  Sparkles
+  Sparkles,
+  LayoutDashboard,
+  Clapperboard
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -30,6 +32,14 @@ export default function Sidebar() {
         <Link href="/you/diary" className="flex flex-col items-center gap-1 hover:text-gray-400">
           <BookOpen className="w-5 h-5" />
           <span>Diary</span>
+        </Link>
+        <Link href="/short" className="flex flex-col items-center gap-1 hover:text-gray-400">
+          <Clapperboard className="w-5 h-5" />
+          <span>Short</span>
+        </Link>
+         <Link href="/you/dashboard" className="flex flex-col items-center gap-1 hover:text-gray-400">
+          <LayoutDashboard className="w-5 h-5" />
+          <span>Dashboard</span>
         </Link>
       </div>
 
