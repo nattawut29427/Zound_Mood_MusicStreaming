@@ -40,7 +40,7 @@ export default function EditUserButton({
     const handleUploadFile = async (file: File) => {
         const key = `pictures/${Date.now()}_${file.name}`;
         const res = await fetch(
-            `/api/upload?key=${encodeURIComponent(key)}&contentType=${encodeURIComponent(file.type)}`
+            `/api/service/upload?key=${encodeURIComponent(key)}&contentType=${encodeURIComponent(file.type)}`
         );
         if (!res.ok) throw new Error("Failed to get signed URL");
         const { url: uploadUrl } = await res.json();

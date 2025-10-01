@@ -8,6 +8,8 @@ import { Song } from "@/components/types";
 import Smallpic from "@/components/cover_pic/Smallpic";
 import { useSession } from "next-auth/react";
 import LoadingSpinner from "@/components/loading/Loading";
+import LoadingOverlay from "@/components/Loadingoveray/page";
+import { set } from "lodash";
 
 type UserData = {
     profileKey?: string;
@@ -49,6 +51,7 @@ export default function ShortSongPage({
     const userId = session?.user?.id;
 
     const signedUrl = useCachedSignedUrl(selectedSong?.audio_url);
+    const [isSaving, setIsSaving] = useState(false);
 
 
 
@@ -142,55 +145,69 @@ export default function ShortSongPage({
         if (!selectedSong) return setMessage("❌ กรุณาเลือกเพลงก่อน");
         if (!signedUrl) return setMessage("❌ กำลังโหลดไฟล์เพลง...");
 
-        const getR2KeyFromUrl = (url: string): string => {
-            try {
-                if (url.startsWith("http://") || url.startsWith("https://")) {
-                    const pathname = new URL(url).pathname; // /storagemusic/songs/xxx.mp3
-                    const key = pathname.replace(/^\/storagemusic\//, ""); // ลบ /storagemusic/ ข้างหน้า
-                    return `storagemusic/${decodeURIComponent(key)}`;
+        setIsSaving(true); // 👉 เริ่มโหลด
+
+        try {
+            const getR2KeyFromUrl = (url: string): string => {
+                try {
+                    if (url.startsWith("http://") || url.startsWith("https://")) {
+                        const pathname = new URL(url).pathname;
+                        const key = pathname.replace(/^\/storagemusic\//, "");
+                        return `storagemusic/${decodeURIComponent(key)}`;
+                    }
+                    return `storagemusic/${decodeURIComponent(url)}`;
+                } catch (e) {
+                    console.error("Invalid URL for r2Key:", url, e);
+                    return url;
                 }
-                return `storagemusic/${decodeURIComponent(url)}`;
-            } catch (e) {
-                console.error("Invalid URL for r2Key:", url, e);
-                return url;
+            };
+
+            const r2KeyToSend = getR2KeyFromUrl(signedUrl);
+
+            const lambdaRes = await fetch("/api/process-r2-audio", {
+                method: "POST",
+                body: JSON.stringify({ r2Key: r2KeyToSend, start, duration: end - start }),
+                headers: { "Content-Type": "application/json" },
+            });
+
+            const lambdaData = await lambdaRes.json();
+            if (!lambdaRes.ok) {
+                setMessage(`❌ Lambda error: ${lambdaData.message}`);
+                return;
             }
-        };
 
+            const trimmedR2Key = lambdaData.trimmedR2Key;
 
-        const r2KeyToSend = getR2KeyFromUrl(signedUrl);
+            const res = await fetch("/api/short-song", {
+                method: "POST",
+                body: JSON.stringify({
+                    userId: session?.user?.id,
+                    songId: selectedSong.id,
+                    trimmedR2Key,
+                    start,
+                    duration: end - start,
+                }),
+                headers: { "Content-Type": "application/json" },
+            });
 
-        const lambdaRes = await fetch("/api/process-r2-audio", {
-            method: "POST",
-            body: JSON.stringify({ r2Key: r2KeyToSend, start, duration: end - start }),
-            headers: { "Content-Type": "application/json" },
-        });
+            if (!res.ok) {
+                const err = await res.json();
+                setMessage(`❌ Save error: ${err.message}`);
+                return;
+            }
 
-        const lambdaData = await lambdaRes.json();
-        if (!lambdaRes.ok) {
-            setMessage(`❌ Lambda error: ${lambdaData.message}`);
-            return;
+            setMessage("✅ Short Song saved สำเร็จ!");
+        } catch (err: any) {
+            console.error(err);
+            setMessage("❌ เกิดข้อผิดพลาดในการบันทึก");
+        } finally {
+            setIsSaving(false); // 👉 ปิด overlay
         }
-
-        const trimmedR2Key = lambdaData.trimmedR2Key;
-
-        const res = await fetch("/api/short-song", {
-            method: "POST",
-            body: JSON.stringify({
-                userId: session?.user?.id,
-                songId: selectedSong.id,
-                trimmedR2Key,
-                start,
-                duration: end - start,
-            }),
-            headers: { "Content-Type": "application/json" },
-        });
-
-        const saved = await res.json();
-        alert(`Short Song saved`);
     };
 
     return (
         <div className="flex flex-col text-white h-full bg-zinc-900 ">
+            <LoadingOverlay show={isSaving} />
             <h2 className="text-lg font-bold p-4">เลือก Short Song ของคุณ</h2>
 
             {/* Song List */}

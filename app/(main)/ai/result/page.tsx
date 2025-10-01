@@ -42,7 +42,6 @@ const AIGenResultPage = () => {
       setSelectedImageFile(file);
       const previewUrl = URL.createObjectURL(file);
       setPictureUrl(previewUrl);
-      setSaveMessage("เลือกรูปใหม่แล้ว (ยังไม่อัปโหลด)");
     }
   }
 
@@ -81,6 +80,7 @@ const AIGenResultPage = () => {
       }
 
       setSaveMessage("Playlist ถูกบันทึกแล้ว");
+      alert("Playlist saved successfully!");
     } catch (err: any) {
       setError("❌ " + err.message);
     } finally {

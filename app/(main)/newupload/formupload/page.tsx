@@ -78,7 +78,7 @@ export default function Page() {
 
       // signed URL เพลง
       const songUrlRes = await fetch(
-        `/api/upload?key=${encodeURIComponent(songKey)}&contentType=${encodeURIComponent(file.type)}`
+        `/api/service/upload?key=${encodeURIComponent(songKey)}&contentType=${encodeURIComponent(file.type)}`
       );
       if (!songUrlRes.ok) throw new Error("ขอ signed URL สำหรับเพลงล้มเหลว");
       const { url: songUploadUrl } = await songUrlRes.json();
@@ -91,7 +91,7 @@ export default function Page() {
 
       // signed URL รูป
       const picUrlRes = await fetch(
-        `/api/upload?key=${encodeURIComponent(picKey)}&contentType=${encodeURIComponent(croppedFile.type)}`
+        `/api/service/upload?key=${encodeURIComponent(picKey)}&contentType=${encodeURIComponent(croppedFile.type)}`
       );
       if (!picUrlRes.ok) throw new Error("ขอ signed URL สำหรับรูปภาพล้มเหลว");
       const { url: picUploadUrl } = await picUrlRes.json();

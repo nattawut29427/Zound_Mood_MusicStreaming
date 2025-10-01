@@ -43,7 +43,7 @@ export default function EditSongButton({
             const picKey = `pictures/${Date.now()}_${file.name}`;
 
             const picUrlRes = await fetch(
-                `/api/upload?key=${encodeURIComponent(
+                `/api/service/upload?key=${encodeURIComponent(
                     picKey
                 )}&contentType=${encodeURIComponent(file.type)}`
             );

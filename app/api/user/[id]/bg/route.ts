@@ -18,37 +18,54 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PUT(
-    req: NextRequest,
-    { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-    const id = await params.id; 
-    console.log("Updating background for user:", id);
+  const id = params.id;
+  console.log("Updating background for user:", id);
 
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // ตรวจสอบ session
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // ดึงไฟล์จาก formData
+  const formData = await req.formData();
+  const file = formData.get("file") as File | null;
+  if (!file) {
+    return NextResponse.json({ error: "No file provided" }, { status: 400 });
+  }
+
+  try {
+    // อัปโหลดไฟล์ไปยัง R2
+    const uploadedFileUrl = await uploadImageToR2(file);
+
+    // เช็คก่อนว่า user มีอยู่จริงไหม
+    const existingUser = await prisma.user.findUnique({ where: { id } });
+    if (!existingUser) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
     }
 
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
-    if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
-  
-    try {
+    // อัปเดต bg_image ของ user
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { bg_image: uploadedFileUrl },
+      select: { id: true, bg_image: true },
+    });
 
-        const uploadedFileUrl = await uploadImageToR2(file);
-
-        const updatedUser = await prisma.user.update({
-            where: { id },
-            data: { bg_image: uploadedFileUrl },
-        });
-
-
-        return NextResponse.json({
-            message: "Background updated",
-            url: uploadedFileUrl,
-        });
-    } catch (err) {
-        console.error("Update bg failed:", err);
-        return NextResponse.json({ error: "Update failed" }, { status: 500 });
-    }
+    return NextResponse.json({
+      message: "Background updated",
+      url: updatedUser.bg_image,
+    });
+  } catch (err: any) {
+    console.error("❌ Update bg failed:", err);
+    return NextResponse.json(
+      { error: err.message || "Update failed" },
+      { status: 500 }
+    );
+  }
 }

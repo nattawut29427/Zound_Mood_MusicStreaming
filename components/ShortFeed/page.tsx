@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ShortSong } from "@/components/types";
 import SongCover from "../PlaylistCover";
 import Loading from "../loading/Loading";
+import { useSignedImage } from "@/lib/hooks/useSignedImage";
 
 interface ShortSongFeedProps {
     shortsongs: ShortSong[];
@@ -17,6 +18,7 @@ export default function ShortSongFeed({ shortsongs, onSongClick }: ShortSongFeed
 
     // ถ้า shortsongs ว่าง, currentShort จะเป็น undefined
     const currentShort = shortsongs[currentIndex];
+    const signedImageUrl = useSignedImage(currentShort?.user?.image || "");
 
     // ถ้าไม่มี data ให้แสดง loader / ข้อความ
     if (!shortsongs || shortsongs.length === 0 || !currentShort) {
@@ -42,7 +44,7 @@ export default function ShortSongFeed({ shortsongs, onSongClick }: ShortSongFeed
             >
                 {/* Background / Cover */}
                 <SongCover
-                    picture={currentShort.song?.picture || "/fallback.jpg"}
+                    picture={currentShort.song?.picture || "error"}
                     name={currentShort.song?.name_song || "Unknown"}
 
 
@@ -59,7 +61,7 @@ export default function ShortSongFeed({ shortsongs, onSongClick }: ShortSongFeed
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-4">
                 <div className="flex items-center gap-3 text-white">
                     <Image
-                        src={currentShort.user?.image || "/fallback-avatar.png"}
+                        src={signedImageUrl || "/2.jpeg"}
                         alt={currentShort.user?.name}
                         width={40}
                         height={40}

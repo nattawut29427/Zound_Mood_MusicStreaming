@@ -46,7 +46,7 @@ export async function uploadImageToR2(file: File): Promise<string> {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     const signedUrlRes = await fetch(
-      `${baseUrl}/api/upload?key=${encodeURIComponent(pictureKey)}&contentType=${encodeURIComponent(file.type)}`
+      `/api/service/upload?key=${encodeURIComponent(pictureKey)}&contentType=${encodeURIComponent(file.type)}`
     );
 
     if (!signedUrlRes.ok) {
